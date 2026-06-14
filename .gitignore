@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.env
+.env.local
+.env.*.local
+
+# Django
+*.sqlite3
+staticfiles/
+mediafiles/
+
+# Node / Next
+node_modules/
+.next/
+out/
+.turbo/
+
+# Vercel
+.vercel
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+
+# Test / coverage
+.coverage
+htmlcov/
+.pytest_cache/

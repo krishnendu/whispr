@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 360" width="900" height="360">
+  <rect width="900" height="360" fill="#0b0820"/>
+  <text x="40" y="50" font-family="Inter, sans-serif" font-size="28" font-weight="700" fill="#fff">Whispr — Color System</text>
+  <text x="40" y="78" font-family="Inter, sans-serif" font-size="14" fill="#9ca3af">Dark-first, glassy, with a heated violet→pink accent for emotion.</text>
+  <g font-family="Inter, sans-serif" font-size="13" fill="#fff">
+    <!-- swatches -->
+    <g transform="translate(40,110)">
+      <rect width="120" height="120" rx="16" fill="#0b0820"/>
+      <text x="0" y="148">bg.deep</text>
+      <text x="0" y="166" fill="#9ca3af">#0B0820</text>
+    </g>
+    <g transform="translate(180,110)">
+      <rect width="120" height="120" rx="16" fill="#1e1b4b"/>
+      <text x="0" y="148">bg.surface</text>
+      <text x="0" y="166" fill="#9ca3af">#1E1B4B</text>
+    </g>
+    <g transform="translate(320,110)">
+      <rect width="120" height="120" rx="16" fill="#a78bfa"/>
+      <text x="0" y="148" fill="#fff">accent.violet</text>
+      <text x="0" y="166" fill="#9ca3af">#A78BFA</text>
+    </g>
+    <g transform="translate(460,110)">
+      <rect width="120" height="120" rx="16" fill="#ec4899"/>
+      <text x="0" y="148">accent.pink</text>
+      <text x="0" y="166" fill="#9ca3af">#EC4899</text>
+    </g>
+    <g transform="translate(600,110)">
+      <rect width="120" height="120" rx="16" fill="#22d3ee"/>
+      <text x="0" y="148">info.cyan</text>
+      <text x="0" y="166" fill="#9ca3af">#22D3EE</text>
+    </g>
+    <g transform="translate(740,110)">
+      <rect width="120" height="120" rx="16" fill="#f59e0b"/>
+      <text x="0" y="148">warn.amber</text>
+      <text x="0" y="166" fill="#9ca3af">#F59E0B</text>
+    </g>
+  </g>
+  <g transform="translate(40,260)" font-family="Inter, sans-serif" font-size="14" fill="#e5e7eb">
+    <text font-weight="700" font-size="16">Typography</text>
+    <text y="24">Display — Inter 800, tight letter-spacing</text>
+    <text y="46" fill="#9ca3af">Body — Inter 400 / 500, 16px base, 1.55 line-height</text>
+    <text y="68" fill="#9ca3af">Mono — JetBrains Mono (codes, tags)</text>
+  </g>
+</svg>

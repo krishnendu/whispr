@@ -1,0 +1,120 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 720" width="1200" height="720">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1e1b4b"/>
+      <stop offset="1" stop-color="#0b0820"/>
+    </linearGradient>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#a78bfa"/>
+      <stop offset="1" stop-color="#ec4899"/>
+    </linearGradient>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#a78bfa"/>
+    </marker>
+  </defs>
+  <rect width="1200" height="720" fill="url(#bg)"/>
+  <text x="40" y="50" fill="#fff" font-family="Inter" font-size="26" font-weight="800">Whispr — System Architecture</text>
+  <text x="40" y="76" fill="#9ca3af" font-family="Inter" font-size="13">Vercel-first: Next.js + Django serverless, with managed realtime &amp; queue so we never run a long-lived process.</text>
+
+  <!-- Client -->
+  <g font-family="Inter" font-size="13">
+    <rect x="40" y="120" width="220" height="100" rx="14" fill="#0f0c2e" stroke="#312e81"/>
+    <text x="150" y="150" text-anchor="middle" fill="#fff" font-weight="700" font-size="15">Browser / PWA</text>
+    <text x="150" y="172" text-anchor="middle" fill="#9ca3af">Next.js 15 (App Router)</text>
+    <text x="150" y="192" text-anchor="middle" fill="#9ca3af">Tailwind + shadcn/ui</text>
+    <text x="150" y="212" text-anchor="middle" fill="#22d3ee">Ably JS client (WS)</text>
+  </g>
+
+  <!-- Vercel Edge -->
+  <g font-family="Inter" font-size="13">
+    <rect x="340" y="120" width="240" height="240" rx="14" fill="#0f0c2e" stroke="#a78bfa"/>
+    <text x="460" y="150" text-anchor="middle" fill="#fff" font-weight="700" font-size="15">Vercel</text>
+    <rect x="360" y="170" width="200" height="56" rx="10" fill="#1a1740"/>
+    <text x="460" y="192" text-anchor="middle" fill="#fff" font-size="13" font-weight="600">Next.js (SSR + static)</text>
+    <text x="460" y="212" text-anchor="middle" fill="#9ca3af" font-size="11">UI, auth callbacks, pages</text>
+    <rect x="360" y="236" width="200" height="56" rx="10" fill="#1a1740"/>
+    <text x="460" y="258" text-anchor="middle" fill="#fff" font-size="13" font-weight="600">Django @ /api/*</text>
+    <text x="460" y="278" text-anchor="middle" fill="#9ca3af" font-size="11">@vercel/python serverless</text>
+    <rect x="360" y="302" width="200" height="44" rx="10" fill="#1a1740"/>
+    <text x="460" y="328" text-anchor="middle" fill="#22d3ee" font-size="12">Vercel Cron (rotation/purge)</text>
+  </g>
+
+  <!-- Postgres -->
+  <g font-family="Inter" font-size="13">
+    <rect x="660" y="120" width="200" height="90" rx="14" fill="#0f0c2e" stroke="#312e81"/>
+    <text x="760" y="150" text-anchor="middle" fill="#fff" font-weight="700">Neon Postgres</text>
+    <text x="760" y="172" text-anchor="middle" fill="#9ca3af">users / convos / tags</text>
+    <text x="760" y="192" text-anchor="middle" fill="#9ca3af">messages (capped, rotating)</text>
+  </g>
+
+  <!-- Redis -->
+  <g font-family="Inter" font-size="13">
+    <rect x="660" y="226" width="200" height="90" rx="14" fill="#0f0c2e" stroke="#312e81"/>
+    <text x="760" y="256" text-anchor="middle" fill="#fff" font-weight="700">Upstash Redis</text>
+    <text x="760" y="278" text-anchor="middle" fill="#9ca3af">hot msgs · match queue</text>
+    <text x="760" y="298" text-anchor="middle" fill="#9ca3af">rate limits · persona mem</text>
+  </g>
+
+  <!-- Ably -->
+  <g font-family="Inter" font-size="13">
+    <rect x="660" y="332" width="200" height="84" rx="14" fill="#0f0c2e" stroke="#22d3ee"/>
+    <text x="760" y="362" text-anchor="middle" fill="#fff" font-weight="700">Ably Realtime</text>
+    <text x="760" y="382" text-anchor="middle" fill="#9ca3af">pub/sub per convo</text>
+    <text x="760" y="402" text-anchor="middle" fill="#9ca3af">typing · presence</text>
+  </g>
+
+  <!-- Bot worker -->
+  <g font-family="Inter" font-size="13">
+    <rect x="940" y="120" width="220" height="160" rx="14" fill="#0f0c2e" stroke="#ec4899"/>
+    <text x="1050" y="150" text-anchor="middle" fill="#fff" font-weight="700">Bot Reply Worker</text>
+    <text x="1050" y="172" text-anchor="middle" fill="#9ca3af">Vercel Cron + Fly.io (low-latency)</text>
+    <rect x="960" y="184" width="180" height="36" rx="8" fill="#1a1740"/>
+    <text x="1050" y="207" text-anchor="middle" fill="#a78bfa" font-size="12">Claude (Sonnet/Haiku)</text>
+    <rect x="960" y="226" width="180" height="36" rx="8" fill="#1a1740"/>
+    <text x="1050" y="249" text-anchor="middle" fill="#a78bfa" font-size="12">Humanizer · pacing</text>
+  </g>
+
+  <!-- Moderation -->
+  <g font-family="Inter" font-size="13">
+    <rect x="940" y="296" width="220" height="120" rx="14" fill="#0f0c2e" stroke="#f59e0b"/>
+    <text x="1050" y="326" text-anchor="middle" fill="#fff" font-weight="700">Moderation Layer</text>
+    <text x="1050" y="348" text-anchor="middle" fill="#9ca3af">in-flight check</text>
+    <text x="1050" y="368" text-anchor="middle" fill="#9ca3af">Claude-judge / OpenAI mod</text>
+    <text x="1050" y="392" text-anchor="middle" fill="#f59e0b">→ Report queue · Bans</text>
+  </g>
+
+  <!-- Anti-spam panel -->
+  <g font-family="Inter" font-size="13">
+    <rect x="40" y="460" width="540" height="200" rx="14" fill="#0f0c2e" stroke="#312e81"/>
+    <text x="60" y="490" fill="#fff" font-weight="700" font-size="15">Anti-bot / anti-spam signals</text>
+    <text x="60" y="516" fill="#9ca3af">• Behavioral: typing speed, paste ratio, jitter, entropy</text>
+    <text x="60" y="536" fill="#9ca3af">• Identity: OAuth-required for "verified human" pool</text>
+    <text x="60" y="556" fill="#9ca3af">• Trust score per account (decays on reports)</text>
+    <text x="60" y="576" fill="#9ca3af">• Rate limits — sliding windows in Redis</text>
+    <text x="60" y="596" fill="#9ca3af">• Device fingerprint (FingerprintJS OSS)</text>
+    <text x="60" y="616" fill="#9ca3af">• Honeypot tags + CAPTCHA on suspicion</text>
+    <text x="60" y="636" fill="#a78bfa">→ shadow-ban · full-ban · ban-evasion catch</text>
+  </g>
+
+  <!-- Rotation panel -->
+  <g font-family="Inter" font-size="13">
+    <rect x="620" y="460" width="540" height="200" rx="14" fill="#0f0c2e" stroke="#312e81"/>
+    <text x="640" y="490" fill="#fff" font-weight="700" font-size="15">Message rotation (limited DB by design)</text>
+    <text x="640" y="516" fill="#9ca3af">• Redis: last 50 msgs/convo · TTL 24h after last activity</text>
+    <text x="640" y="536" fill="#9ca3af">• Postgres: last 20 msgs/convo (older pruned on insert)</text>
+    <text x="640" y="556" fill="#9ca3af">• Idle &gt; 7d → conversation fully purged</text>
+    <text x="640" y="576" fill="#9ca3af">• User vault: up to 10 saved convos, still rotates</text>
+    <text x="640" y="596" fill="#9ca3af">• Aggregates kept long-term, raw text isn't</text>
+    <text x="640" y="626" fill="#a78bfa">Result: footprint stays flat regardless of MAU growth</text>
+  </g>
+
+  <!-- arrows -->
+  <line x1="260" y1="170" x2="340" y2="200" stroke="#a78bfa" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="580" y1="200" x2="660" y2="165" stroke="#a78bfa" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="580" y1="270" x2="660" y2="270" stroke="#a78bfa" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="580" y1="320" x2="660" y2="370" stroke="#a78bfa" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="860" y1="270" x2="940" y2="200" stroke="#ec4899" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="940" y1="240" x2="860" y2="370" stroke="#22d3ee" stroke-width="2" stroke-dasharray="4 3" marker-end="url(#arrow)"/>
+  <line x1="940" y1="350" x2="860" y2="290" stroke="#f59e0b" stroke-width="2" stroke-dasharray="4 3" marker-end="url(#arrow)"/>
+  <line x1="260" y1="200" x2="40" y2="460" stroke="#a78bfa" stroke-width="1" stroke-dasharray="3 3" opacity="0.5"/>
+</svg>
