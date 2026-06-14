@@ -1,44 +1,51 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 360" width="900" height="360">
-  <rect width="900" height="360" fill="#0b0820"/>
-  <text x="40" y="50" font-family="Inter, sans-serif" font-size="28" font-weight="700" fill="#fff">Whispr — Color System</text>
-  <text x="40" y="78" font-family="Inter, sans-serif" font-size="14" fill="#9ca3af">Dark-first, glassy, with a heated violet→pink accent for emotion.</text>
-  <g font-family="Inter, sans-serif" font-size="13" fill="#fff">
-    <!-- swatches -->
-    <g transform="translate(40,110)">
-      <rect width="120" height="120" rx="16" fill="#0b0820"/>
-      <text x="0" y="148">bg.deep</text>
-      <text x="0" y="166" fill="#9ca3af">#0B0820</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 700" width="1200" height="700">
+  <rect width="1200" height="700" fill="#F7F3EC"/>
+
+  <text x="72" y="100" font-family="'Instrument Serif', Georgia, serif" font-style="italic" font-size="56" fill="#161513">the system</text>
+  <text x="72" y="134" font-family="'Geist', system-ui, sans-serif" font-size="14" fill="#807972">Warm paper. Deep ink. One bold coral. No gradients. Room to breathe.</text>
+
+  <!-- swatches -->
+  <g font-family="'Geist', system-ui, sans-serif">
+    <g transform="translate(72,200)">
+      <rect width="180" height="180" rx="16" fill="#F7F3EC" stroke="#E6DFD2"/>
+      <text x="0" y="216" font-size="14" font-weight="600" fill="#161513">paper</text>
+      <text x="0" y="240" font-family="'Geist Mono', ui-monospace, monospace" font-size="12" fill="#807972">#F7F3EC</text>
     </g>
-    <g transform="translate(180,110)">
-      <rect width="120" height="120" rx="16" fill="#1e1b4b"/>
-      <text x="0" y="148">bg.surface</text>
-      <text x="0" y="166" fill="#9ca3af">#1E1B4B</text>
+    <g transform="translate(280,200)">
+      <rect width="180" height="180" rx="16" fill="#FFFFFF" stroke="#E6DFD2"/>
+      <text x="0" y="216" font-size="14" font-weight="600" fill="#161513">card</text>
+      <text x="0" y="240" font-family="'Geist Mono', ui-monospace, monospace" font-size="12" fill="#807972">#FFFFFF</text>
     </g>
-    <g transform="translate(320,110)">
-      <rect width="120" height="120" rx="16" fill="#a78bfa"/>
-      <text x="0" y="148" fill="#fff">accent.violet</text>
-      <text x="0" y="166" fill="#9ca3af">#A78BFA</text>
+    <g transform="translate(488,200)">
+      <rect width="180" height="180" rx="16" fill="#161513"/>
+      <text x="0" y="216" font-size="14" font-weight="600" fill="#161513">ink</text>
+      <text x="0" y="240" font-family="'Geist Mono', ui-monospace, monospace" font-size="12" fill="#807972">#161513</text>
     </g>
-    <g transform="translate(460,110)">
-      <rect width="120" height="120" rx="16" fill="#ec4899"/>
-      <text x="0" y="148">accent.pink</text>
-      <text x="0" y="166" fill="#9ca3af">#EC4899</text>
+    <g transform="translate(696,200)">
+      <rect width="180" height="180" rx="16" fill="#FF4F1F"/>
+      <text x="0" y="216" font-size="14" font-weight="600" fill="#161513">coral · action</text>
+      <text x="0" y="240" font-family="'Geist Mono', ui-monospace, monospace" font-size="12" fill="#807972">#FF4F1F</text>
     </g>
-    <g transform="translate(600,110)">
-      <rect width="120" height="120" rx="16" fill="#22d3ee"/>
-      <text x="0" y="148">info.cyan</text>
-      <text x="0" y="166" fill="#9ca3af">#22D3EE</text>
-    </g>
-    <g transform="translate(740,110)">
-      <rect width="120" height="120" rx="16" fill="#f59e0b"/>
-      <text x="0" y="148">warn.amber</text>
-      <text x="0" y="166" fill="#9ca3af">#F59E0B</text>
+    <g transform="translate(904,200)">
+      <rect width="180" height="180" rx="16" fill="#2C5F4F"/>
+      <text x="0" y="216" font-size="14" font-weight="600" fill="#161513">moss · verified</text>
+      <text x="0" y="240" font-family="'Geist Mono', ui-monospace, monospace" font-size="12" fill="#807972">#2C5F4F</text>
     </g>
   </g>
-  <g transform="translate(40,260)" font-family="Inter, sans-serif" font-size="14" fill="#e5e7eb">
-    <text font-weight="700" font-size="16">Typography</text>
-    <text y="24">Display — Inter 800, tight letter-spacing</text>
-    <text y="46" fill="#9ca3af">Body — Inter 400 / 500, 16px base, 1.55 line-height</text>
-    <text y="68" fill="#9ca3af">Mono — JetBrains Mono (codes, tags)</text>
+
+  <line x1="72" y1="448" x2="1128" y2="448" stroke="#E6DFD2"/>
+
+  <!-- typography -->
+  <g font-family="'Geist', system-ui, sans-serif" fill="#161513">
+    <text x="72" y="498" font-size="12" letter-spacing="2" fill="#807972">TYPOGRAPHY</text>
+
+    <text x="72" y="558" font-family="'Instrument Serif', Georgia, serif" font-style="italic" font-size="52">Instrument Serif — italic</text>
+    <text x="72" y="582" font-size="13" fill="#807972">display · headers · intimate copy</text>
+
+    <text x="72" y="630" font-size="28" font-weight="600">Geist — regular · medium · semibold</text>
+    <text x="72" y="656" font-size="13" fill="#807972">body · UI · buttons</text>
+
+    <text x="710" y="630" font-family="'Geist Mono', ui-monospace, monospace" font-size="22" font-weight="500">Geist Mono</text>
+    <text x="710" y="656" font-size="13" fill="#807972">handles · tags · codes</text>
   </g>
 </svg>

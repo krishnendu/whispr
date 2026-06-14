@@ -1,78 +1,69 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 390 844" width="390" height="844">
-  <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#1e1b4b"/>
-      <stop offset="1" stop-color="#0b0820"/>
-    </linearGradient>
-    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0" stop-color="#a78bfa"/>
-      <stop offset="1" stop-color="#ec4899"/>
-    </linearGradient>
-  </defs>
-  <rect width="390" height="844" fill="url(#bg)"/>
+  <rect width="390" height="844" fill="#F7F3EC"/>
 
   <!-- status bar -->
-  <text x="24" y="34" fill="#fff" font-family="Inter" font-size="14" font-weight="600">9:41</text>
+  <text x="32" y="38" fill="#161513" font-family="'Geist', system-ui, sans-serif" font-size="14" font-weight="600">9:41</text>
 
-  <!-- logo -->
-  <text x="195" y="120" text-anchor="middle" fill="url(#accent)" font-family="Inter" font-size="40" font-weight="800">Whispr</text>
-  <text x="195" y="148" text-anchor="middle" fill="#cbd5e1" font-family="Inter" font-size="13" letter-spacing="3">TALK · TO · ANYONE</text>
+  <!-- wordmark -->
+  <text x="32" y="98" font-family="'Instrument Serif', Georgia, serif" font-style="italic" font-size="40" fill="#161513">whispr</text>
+  <circle cx="138" cy="92" r="5" fill="#FF4F1F"/>
 
-  <!-- card -->
-  <rect x="24" y="200" width="342" height="540" rx="28" fill="#0f0c2e" stroke="#312e81" stroke-width="1"/>
+  <!-- intro -->
+  <text x="32" y="178" font-family="'Instrument Serif', Georgia, serif" font-style="italic" font-size="44" fill="#161513">say hi.</text>
+  <text x="32" y="218" font-family="'Instrument Serif', Georgia, serif" font-style="italic" font-size="38" fill="#161513">nobody has to know</text>
+  <text x="32" y="252" font-family="'Instrument Serif', Georgia, serif" font-style="italic" font-size="38" fill="#161513">it's you.</text>
 
-  <text x="48" y="248" fill="#fff" font-family="Inter" font-size="22" font-weight="700">Pick a handle</text>
-  <text x="48" y="272" fill="#9ca3af" font-family="Inter" font-size="13">No real name. Anything goes (almost).</text>
-  <rect x="48" y="294" width="294" height="52" rx="12" fill="#1a1740" stroke="#4c1d95"/>
-  <text x="68" y="326" fill="#a78bfa" font-family="Inter" font-size="16">@moonlit_fox</text>
+  <!-- handle -->
+  <text x="32" y="320" font-family="'Geist', system-ui, sans-serif" font-size="12" letter-spacing="2" fill="#807972">YOUR HANDLE</text>
+  <text x="32" y="362" font-family="'Geist Mono', ui-monospace, monospace" font-size="24" font-weight="500" fill="#161513">@moonlit_fox</text>
+  <line x1="32" y1="376" x2="358" y2="376" stroke="#161513" stroke-width="1.5"/>
 
-  <text x="48" y="380" fill="#fff" font-family="Inter" font-size="18" font-weight="700">Your vibe (pick 3-5)</text>
+  <!-- vibes -->
+  <text x="32" y="420" font-family="'Geist', system-ui, sans-serif" font-size="12" letter-spacing="2" fill="#807972">PICK 3 — 5 VIBES</text>
 
-  <!-- tag pills -->
-  <g font-family="Inter" font-size="12" font-weight="600">
-    <g transform="translate(48,400)">
-      <rect width="74" height="32" rx="16" fill="url(#accent)"/>
-      <text x="37" y="21" text-anchor="middle" fill="#fff">#chill</text>
+  <g font-family="'Geist', system-ui, sans-serif" font-size="14">
+    <g transform="translate(32,436)">
+      <rect width="74" height="36" rx="18" fill="#161513"/>
+      <text x="37" y="23" text-anchor="middle" fill="#F7F3EC">chill</text>
     </g>
-    <g transform="translate(130,400)">
-      <rect width="84" height="32" rx="16" fill="url(#accent)"/>
-      <text x="42" y="21" text-anchor="middle" fill="#fff">#latenite</text>
+    <g transform="translate(114,436)">
+      <rect width="90" height="36" rx="18" fill="#161513"/>
+      <text x="45" y="23" text-anchor="middle" fill="#F7F3EC">latenite</text>
     </g>
-    <g transform="translate(222,400)">
-      <rect width="88" height="32" rx="16" fill="url(#accent)"/>
-      <text x="44" y="21" text-anchor="middle" fill="#fff">#flirty</text>
+    <g transform="translate(212,436)">
+      <rect width="74" height="36" rx="18" fill="#161513"/>
+      <text x="37" y="23" text-anchor="middle" fill="#F7F3EC">flirty</text>
     </g>
-    <g transform="translate(48,444)">
-      <rect width="100" height="32" rx="16" fill="#1a1740" stroke="#4c1d95"/>
-      <text x="50" y="21" text-anchor="middle" fill="#cbd5e1">#vent</text>
+    <g transform="translate(32,480)">
+      <rect width="72" height="36" rx="18" fill="none" stroke="#161513" stroke-width="1.2"/>
+      <text x="36" y="23" text-anchor="middle" fill="#161513">vent</text>
     </g>
-    <g transform="translate(156,444)">
-      <rect width="110" height="32" rx="16" fill="#1a1740" stroke="#4c1d95"/>
-      <text x="55" y="21" text-anchor="middle" fill="#cbd5e1">#gaming</text>
+    <g transform="translate(112,480)">
+      <rect width="92" height="36" rx="18" fill="none" stroke="#161513" stroke-width="1.2"/>
+      <text x="46" y="23" text-anchor="middle" fill="#161513">gaming</text>
     </g>
-    <g transform="translate(274,444)">
-      <rect width="68" height="32" rx="16" fill="#1a1740" stroke="#4c1d95"/>
-      <text x="34" y="21" text-anchor="middle" fill="#cbd5e1">#deep</text>
+    <g transform="translate(212,480)">
+      <rect width="72" height="36" rx="18" fill="none" stroke="#161513" stroke-width="1.2"/>
+      <text x="36" y="23" text-anchor="middle" fill="#161513">deep</text>
     </g>
-    <g transform="translate(48,488)">
-      <rect width="120" height="32" rx="16" fill="#1a1740" stroke="#4c1d95"/>
-      <text x="60" y="21" text-anchor="middle" fill="#cbd5e1">#philosophy</text>
-    </g>
-    <g transform="translate(176,488)">
-      <rect width="100" height="32" rx="16" fill="#1a1740" stroke="#4c1d95"/>
-      <text x="50" y="21" text-anchor="middle" fill="#cbd5e1">#music</text>
+    <g transform="translate(292,480)">
+      <rect width="66" height="36" rx="18" fill="none" stroke="#807972" stroke-width="1" stroke-dasharray="3 3"/>
+      <text x="33" y="23" text-anchor="middle" fill="#807972">+ more</text>
     </g>
   </g>
 
-  <!-- age confirm -->
-  <rect x="48" y="554" width="294" height="64" rx="14" fill="#1a1740" stroke="#4c1d95"/>
-  <circle cx="72" cy="586" r="10" fill="none" stroke="#a78bfa" stroke-width="2"/>
-  <text x="92" y="582" fill="#fff" font-family="Inter" font-size="14" font-weight="600">I'm 18+</text>
-  <text x="92" y="600" fill="#9ca3af" font-family="Inter" font-size="11">Unlock spicier conversations</text>
+  <!-- age -->
+  <line x1="32" y1="560" x2="358" y2="560" stroke="#E6DFD2"/>
+  <g transform="translate(32,584)">
+    <rect width="22" height="22" rx="6" fill="#161513"/>
+    <path d="M5 12 l5 5 l11 -12" fill="none" stroke="#F7F3EC" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="36" y="17" font-family="'Geist', system-ui, sans-serif" font-size="15" font-weight="500" fill="#161513">I'm 18+</text>
+    <text x="36" y="36" font-family="'Geist', system-ui, sans-serif" font-size="12" fill="#807972">unlocks spicier conversations</text>
+  </g>
 
-  <!-- continue -->
-  <rect x="48" y="650" width="294" height="56" rx="28" fill="url(#accent)"/>
-  <text x="195" y="685" text-anchor="middle" fill="#fff" font-family="Inter" font-size="17" font-weight="700">Enter the void →</text>
+  <!-- cta -->
+  <rect x="32" y="688" width="326" height="60" rx="30" fill="#FF4F1F"/>
+  <text x="195" y="726" text-anchor="middle" font-family="'Geist', system-ui, sans-serif" font-size="17" font-weight="600" fill="#FFFFFF">start whispering</text>
 
-  <text x="195" y="780" text-anchor="middle" fill="#6b7280" font-family="Inter" font-size="11">By continuing you agree to our Terms & Privacy.</text>
+  <text x="195" y="788" text-anchor="middle" font-family="'Geist', system-ui, sans-serif" font-size="11" fill="#807972">by continuing you agree to our terms &amp; privacy.</text>
 </svg>

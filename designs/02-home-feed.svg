@@ -1,105 +1,71 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 390 844" width="390" height="844">
-  <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#1e1b4b"/>
-      <stop offset="1" stop-color="#0b0820"/>
-    </linearGradient>
-    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0" stop-color="#a78bfa"/>
-      <stop offset="1" stop-color="#ec4899"/>
-    </linearGradient>
-  </defs>
-  <rect width="390" height="844" fill="url(#bg)"/>
+  <rect width="390" height="844" fill="#F7F3EC"/>
 
-  <!-- top bar -->
-  <text x="24" y="60" fill="url(#accent)" font-family="Inter" font-size="26" font-weight="800">Whispr</text>
-  <circle cx="358" cy="55" r="18" fill="#1a1740" stroke="#4c1d95"/>
-  <text x="358" y="61" text-anchor="middle" fill="#a78bfa" font-family="Inter" font-size="14" font-weight="700">M</text>
+  <!-- top -->
+  <text x="32" y="58" font-family="'Instrument Serif', Georgia, serif" font-style="italic" font-size="28" fill="#161513">whispr</text>
+  <circle cx="73" cy="54" r="3.5" fill="#FF4F1F"/>
+  <circle cx="346" cy="52" r="20" fill="none" stroke="#161513" stroke-width="1.2"/>
+  <text x="346" y="58" text-anchor="middle" font-family="'Geist', system-ui, sans-serif" font-size="13" font-weight="600" fill="#161513">M</text>
 
   <!-- greeting -->
-  <text x="24" y="120" fill="#fff" font-family="Inter" font-size="20" font-weight="700">Hey @moonlit_fox 👋</text>
-  <text x="24" y="146" fill="#9ca3af" font-family="Inter" font-size="13">412 people are online in your vibes.</text>
+  <text x="32" y="148" font-family="'Instrument Serif', Georgia, serif" font-style="italic" font-size="36" fill="#161513">evening,</text>
+  <text x="32" y="190" font-family="'Instrument Serif', Georgia, serif" font-style="italic" font-size="36" fill="#161513">@moonlit_fox.</text>
+  <text x="32" y="222" font-family="'Geist', system-ui, sans-serif" font-size="14" fill="#807972">412 people are in your vibes right now.</text>
 
-  <!-- big CTA -->
-  <rect x="24" y="170" width="342" height="148" rx="24" fill="url(#accent)"/>
-  <text x="48" y="216" fill="#fff" font-family="Inter" font-size="22" font-weight="700">Find someone to talk to</text>
-  <text x="48" y="244" fill="#fde7f3" font-family="Inter" font-size="13">Match by vibe. End anytime. Nothing follows you.</text>
-  <rect x="48" y="262" width="120" height="36" rx="18" fill="rgba(0,0,0,0.4)"/>
-  <text x="108" y="284" text-anchor="middle" fill="#fff" font-family="Inter" font-size="13" font-weight="700">Start matching →</text>
+  <!-- big CTA card -->
+  <rect x="32" y="252" width="326" height="180" rx="20" fill="#161513"/>
+  <text x="52" y="294" font-family="'Instrument Serif', Georgia, serif" font-style="italic" font-size="28" fill="#F7F3EC">find someone</text>
+  <text x="52" y="324" font-family="'Instrument Serif', Georgia, serif" font-style="italic" font-size="28" fill="#F7F3EC">to talk to.</text>
+  <text x="52" y="358" font-family="'Geist', system-ui, sans-serif" font-size="13" fill="#A8A29E">match by vibe. end anytime.</text>
+  <rect x="52" y="376" width="132" height="40" rx="20" fill="#FF4F1F"/>
+  <text x="118" y="402" text-anchor="middle" font-family="'Geist', system-ui, sans-serif" font-size="13" font-weight="600" fill="#FFFFFF">start →</text>
 
-  <!-- vibes section -->
-  <text x="24" y="356" fill="#fff" font-family="Inter" font-size="16" font-weight="700">Your vibes</text>
-  <g font-family="Inter" font-size="12" font-weight="600">
-    <g transform="translate(24,376)">
-      <rect width="74" height="32" rx="16" fill="#1a1740" stroke="#4c1d95"/>
-      <text x="37" y="21" text-anchor="middle" fill="#a78bfa">#chill</text>
+  <!-- your vibes -->
+  <text x="32" y="476" font-family="'Geist', system-ui, sans-serif" font-size="12" letter-spacing="2" fill="#807972">YOUR VIBES</text>
+  <g font-family="'Geist', system-ui, sans-serif" font-size="13" font-weight="500">
+    <g transform="translate(32,490)">
+      <rect width="64" height="32" rx="16" fill="none" stroke="#161513" stroke-width="1.2"/>
+      <text x="32" y="20" text-anchor="middle" fill="#161513">chill</text>
     </g>
-    <g transform="translate(106,376)">
-      <rect width="84" height="32" rx="16" fill="#1a1740" stroke="#4c1d95"/>
-      <text x="42" y="21" text-anchor="middle" fill="#a78bfa">#latenite</text>
+    <g transform="translate(104,490)">
+      <rect width="84" height="32" rx="16" fill="none" stroke="#161513" stroke-width="1.2"/>
+      <text x="42" y="20" text-anchor="middle" fill="#161513">latenite</text>
     </g>
-    <g transform="translate(198,376)">
-      <rect width="80" height="32" rx="16" fill="#1a1740" stroke="#4c1d95"/>
-      <text x="40" y="21" text-anchor="middle" fill="#a78bfa">#flirty</text>
+    <g transform="translate(196,490)">
+      <rect width="64" height="32" rx="16" fill="none" stroke="#161513" stroke-width="1.2"/>
+      <text x="32" y="20" text-anchor="middle" fill="#161513">flirty</text>
     </g>
-    <g transform="translate(286,376)">
-      <rect width="44" height="32" rx="16" fill="#1a1740" stroke="#4c1d95"/>
-      <text x="22" y="21" text-anchor="middle" fill="#a78bfa">+2</text>
+    <g transform="translate(268,490)">
+      <rect width="52" height="32" rx="16" fill="none" stroke="#161513" stroke-width="1.2"/>
+      <text x="26" y="20" text-anchor="middle" fill="#807972">edit</text>
     </g>
   </g>
 
-  <!-- trending tags -->
-  <text x="24" y="448" fill="#fff" font-family="Inter" font-size="16" font-weight="700">Trending tonight</text>
-  <g font-family="Inter" font-size="12">
-    <g transform="translate(24,468)">
-      <rect width="120" height="44" rx="14" fill="#0f0c2e" stroke="#312e81"/>
-      <text x="60" y="22" text-anchor="middle" fill="#fff" font-weight="700">#3am-thoughts</text>
-      <text x="60" y="36" text-anchor="middle" fill="#9ca3af">1.2k online</text>
-    </g>
-    <g transform="translate(152,468)">
-      <rect width="110" height="44" rx="14" fill="#0f0c2e" stroke="#312e81"/>
-      <text x="55" y="22" text-anchor="middle" fill="#fff" font-weight="700">#heartbreak</text>
-      <text x="55" y="36" text-anchor="middle" fill="#9ca3af">870 online</text>
-    </g>
-    <g transform="translate(270,468)">
-      <rect width="96" height="44" rx="14" fill="#0f0c2e" stroke="#312e81"/>
-      <text x="48" y="22" text-anchor="middle" fill="#fff" font-weight="700">#bored</text>
-      <text x="48" y="36" text-anchor="middle" fill="#9ca3af">2.4k online</text>
-    </g>
-  </g>
+  <!-- saved -->
+  <line x1="32" y1="572" x2="358" y2="572" stroke="#E6DFD2"/>
+  <text x="32" y="606" font-family="'Geist', system-ui, sans-serif" font-size="12" letter-spacing="2" fill="#807972">SAVED WHISPERS</text>
 
-  <!-- vaulted chats -->
-  <text x="24" y="552" fill="#fff" font-family="Inter" font-size="16" font-weight="700">Saved whispers</text>
-  <text x="338" y="552" text-anchor="end" fill="#a78bfa" font-family="Inter" font-size="12">see all</text>
-
-  <g transform="translate(24,572)">
-    <rect width="342" height="72" rx="16" fill="#0f0c2e" stroke="#312e81"/>
-    <circle cx="40" cy="36" r="20" fill="url(#accent)"/>
-    <text x="40" y="42" text-anchor="middle" fill="#fff" font-family="Inter" font-size="14" font-weight="700">A</text>
-    <text x="74" y="32" fill="#fff" font-family="Inter" font-size="14" font-weight="600">aria_</text>
-    <text x="74" y="52" fill="#9ca3af" font-family="Inter" font-size="12">"that sounded so real, lol"</text>
-    <text x="320" y="32" text-anchor="end" fill="#6b7280" font-family="Inter" font-size="11">2d</text>
-  </g>
-
-  <g transform="translate(24,656)">
-    <rect width="342" height="72" rx="16" fill="#0f0c2e" stroke="#312e81"/>
-    <circle cx="40" cy="36" r="20" fill="#22d3ee"/>
-    <text x="40" y="42" text-anchor="middle" fill="#0b0820" font-family="Inter" font-size="14" font-weight="700">D</text>
-    <text x="74" y="32" fill="#fff" font-family="Inter" font-size="14" font-weight="600">drift_</text>
-    <text x="74" y="52" fill="#9ca3af" font-family="Inter" font-size="12">"see you in the void"</text>
-    <text x="320" y="32" text-anchor="end" fill="#6b7280" font-family="Inter" font-size="11">5d</text>
+  <g font-family="'Geist', system-ui, sans-serif">
+    <g transform="translate(32,640)">
+      <text font-family="'Instrument Serif', Georgia, serif" font-style="italic" font-size="20" fill="#161513">aria_</text>
+      <text y="22" font-size="13" fill="#807972">"that sounded so real, lol"</text>
+      <text x="326" y="-2" text-anchor="end" font-size="11" fill="#807972">2d</text>
+    </g>
+    <line x1="32" y1="694" x2="358" y2="694" stroke="#E6DFD2"/>
+    <g transform="translate(32,722)">
+      <text font-family="'Instrument Serif', Georgia, serif" font-style="italic" font-size="20" fill="#161513">drift_</text>
+      <text y="22" font-size="13" fill="#807972">"see you in the void"</text>
+      <text x="326" y="-2" text-anchor="end" font-size="11" fill="#807972">5d</text>
+    </g>
   </g>
 
   <!-- bottom nav -->
-  <rect x="0" y="768" width="390" height="76" fill="#0a0719"/>
-  <g font-family="Inter" font-size="11" font-weight="600">
-    <text x="50" y="810" text-anchor="middle" fill="#a78bfa">●</text>
-    <text x="50" y="828" text-anchor="middle" fill="#a78bfa">Home</text>
-    <text x="145" y="810" text-anchor="middle" fill="#6b7280">○</text>
-    <text x="145" y="828" text-anchor="middle" fill="#6b7280">Discover</text>
-    <text x="245" y="810" text-anchor="middle" fill="#6b7280">○</text>
-    <text x="245" y="828" text-anchor="middle" fill="#6b7280">Chats</text>
-    <text x="340" y="810" text-anchor="middle" fill="#6b7280">○</text>
-    <text x="340" y="828" text-anchor="middle" fill="#6b7280">Me</text>
+  <line x1="0" y1="772" x2="390" y2="772" stroke="#E6DFD2"/>
+  <g font-family="'Geist', system-ui, sans-serif" font-size="11" font-weight="500">
+    <text x="60" y="806" text-anchor="middle" fill="#161513">home</text>
+    <line x1="40" y1="816" x2="80" y2="816" stroke="#FF4F1F" stroke-width="2"/>
+    <text x="148" y="806" text-anchor="middle" fill="#807972">discover</text>
+    <text x="240" y="806" text-anchor="middle" fill="#807972">chats</text>
+    <text x="332" y="806" text-anchor="middle" fill="#807972">me</text>
   </g>
 </svg>
