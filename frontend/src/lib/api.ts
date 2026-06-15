@@ -1,0 +1,161 @@
+/**
+ * Thin Whispr API client. Reads `whispr_token` from cookies on the server (via
+ * `cookies()`) or from a passed-in token on the client (via `useAuth`).
+ */
+
+export const API_BASE =
+  process.env.NEXT_PUBLIC_API_BASE ?? "http://localhost:8000";
+
+export type WhisprUser = {
+  id: number;
+  handle: string;
+  pronouns: string;
+  locale: string;
+  age_confirmed: boolean;
+  trust_score: number;
+  is_operator: boolean;
+  onboarding_complete: boolean;
+  tags: { slug: string; label: string; category: string }[];
+};
+
+export type TagsByCategory = {
+  categories: Record<
+    string,
+    {
+      slug: string;
+      label: string;
+      category: string;
+      is_user_created: boolean;
+      usage_count: number;
+    }[]
+  >;
+};
+
+async function req<T>(
+  path: string,
+  init: RequestInit & { token?: string | null } = {},
+): Promise<T> {
+  const { token, headers, ...rest } = init;
+  const res = await fetch(`${API_BASE}${path}`, {
+    ...rest,
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Token ${token}` } : {}),
+      ...(headers ?? {}),
+    },
+    cache: "no-store",
+  });
+  if (!res.ok) {
+    let detail = res.statusText;
+    try {
+      const body = await res.json();
+      detail = body.detail ?? JSON.stringify(body);
+    } catch {}
+    throw new Error(`${res.status}: ${detail}`);
+  }
+  return res.json() as Promise<T>;
+}
+
+export const api = {
+  health: () => req<{ ok: boolean }>("/api/health"),
+
+  // Auth
+  googleStart: () => req<{ url: string }>("/api/auth/google/start"),
+  googleCallback: (code: string) =>
+    req<{ token: string; user: WhisprUser }>("/api/auth/google/callback", {
+      method: "POST",
+      body: JSON.stringify({ code }),
+    }),
+  magicSend: (email: string) =>
+    req<{ sent: boolean; dev_link?: string }>("/api/auth/magic/send", {
+      method: "POST",
+      body: JSON.stringify({
+        email,
+        frontend_base:
+          typeof window !== "undefined" ? window.location.origin : undefined,
+      }),
+    }),
+  magicVerify: (token: string) =>
+    req<{ token: string; user: WhisprUser }>("/api/auth/magic/verify", {
+      method: "POST",
+      body: JSON.stringify({ token }),
+    }),
+
+  // Profile
+  me: (token: string) => req<WhisprUser>("/api/me", { token }),
+  updateMe: (
+    token: string,
+    body: Partial<{
+      handle: string;
+      pronouns: string;
+      locale: string;
+      age_confirmed: boolean;
+      tag_slugs: string[];
+    }>,
+  ) =>
+    req<WhisprUser>("/api/me", {
+      method: "PUT",
+      token,
+      body: JSON.stringify(body),
+    }),
+
+  // Tags
+  tags: (q?: string) =>
+    req<TagsByCategory>(`/api/tags${q ? `?q=${encodeURIComponent(q)}` : ""}`),
+
+  // Matching
+  matchStart: (token: string) =>
+    req<{ status: "matched" | "waiting"; conversation_id?: number }>(
+      "/api/match/start",
+      { method: "POST", token, body: "{}" },
+    ),
+  matchStatus: (token: string) =>
+    req<{ status: "idle" | "waiting" | "matched"; conversation_id?: number }>(
+      "/api/match/status",
+      { token },
+    ),
+  matchCancel: (token: string) =>
+    req<{ status: string }>("/api/match/cancel", {
+      method: "POST",
+      token,
+      body: "{}",
+    }),
+
+  // Chat
+  getConversation: (token: string, id: number) =>
+    req<ConversationPayload>(`/api/conversations/${id}`, { token }),
+  pollConversation: (token: string, id: number, afterId: number) =>
+    req<{ messages: ChatMessage[]; ended: boolean }>(
+      `/api/conversations/${id}/poll?after=${afterId}`,
+      { token },
+    ),
+  postMessage: (token: string, id: number, body: string) =>
+    req<ChatMessage>(`/api/conversations/${id}/messages`, {
+      method: "POST",
+      token,
+      body: JSON.stringify({ body }),
+    }),
+  endConversation: (token: string, id: number) =>
+    req<{ ended: boolean }>(`/api/conversations/${id}/end`, {
+      method: "POST",
+      token,
+      body: "{}",
+    }),
+};
+
+export type ChatMessage = {
+  id: number;
+  body: string;
+  sent_at: string;
+  is_me: boolean;
+  is_persona: boolean;
+};
+
+export type ConversationPayload = {
+  id: number;
+  kind: "human" | "bot";
+  other_handle: string;
+  started_at: string;
+  ended_at: string | null;
+  messages: ChatMessage[];
+};

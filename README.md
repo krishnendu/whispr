@@ -8,9 +8,10 @@ See [`PLAN.md`](./PLAN.md) for the full product + architecture plan, and [`desig
 
 ## Stack
 - Backend: Django 5 + DRF (deployed as Vercel serverless via `@vercel/python`)
-- Frontend: Next.js 15 + Tailwind + shadcn/ui
+- Frontend: Next.js 16 + Tailwind + App Router
 - DB: Neon Postgres · Cache: Upstash Redis · Realtime: Ably
-- AI: Anthropic Claude (Sonnet 4.6 / Haiku 4.5) with prompt caching
+- AI: Groq (OpenAI-compatible) — Llama 3.3 default
+- Auth: Google OAuth + magic links via Gmail SMTP
 - Host: Vercel
 
 ## Layout
@@ -22,5 +23,35 @@ designs/   Mockups & brand
 PLAN.md    Full plan
 ```
 
+## Local dev
+
+Copy env template, fill in services:
+
+```bash
+cp .env.example .env.local
+# fill DATABASE_URL (Neon), REDIS_URL (Upstash), ABLY_API_KEY, GROQ_API_KEY,
+# GOOGLE_OAUTH_*, EMAIL_HOST_USER / EMAIL_HOST_PASSWORD
+```
+
+Backend:
+
+```bash
+cd backend
+python3 -m venv .venv
+.venv/bin/pip install -r requirements.txt
+.venv/bin/python manage.py migrate
+.venv/bin/python manage.py runserver  # http://localhost:8000
+```
+
+Frontend:
+
+```bash
+cd frontend
+npm install
+npm run dev  # http://localhost:3000
+```
+
+Smoke check: visit `http://localhost:8000/api/health` → `{"ok": true, "service": "whispr-api"}`.
+
 ## Status
-Phase 0 — scaffolding & plan. See the roadmap in `PLAN.md`.
+Phase 0 — scaffolding & plan. Next up: auth, profiles, tags (Phase 1 in `PLAN.md`).
