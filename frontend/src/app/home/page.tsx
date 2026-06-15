@@ -56,8 +56,14 @@ export default async function HomePage() {
             Find someone
           </Link>
           <Link
-            href="/onboarding"
+            href="/personas"
             className="rounded-full border border-[#1A1A1A]/15 bg-white px-8 py-3 text-sm font-medium text-[#1A1A1A] transition-colors hover:bg-[#1A1A1A]/5"
+          >
+            Browse personas
+          </Link>
+          <Link
+            href="/onboarding"
+            className="rounded-full border border-transparent px-6 py-3 text-sm text-[#1A1A1A]/60 transition-colors hover:text-[#E2624A]"
           >
             Edit vibe
           </Link>

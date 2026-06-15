@@ -8,6 +8,8 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
+from apps.bots.runner import schedule_bot_reply
+
 from .models import Conversation, Message
 
 
@@ -53,7 +55,10 @@ def get_conversation(request, convo_id: int):
     if not _ensure_participant(convo, request.user.id):
         return Response({"detail": "Not your conversation."}, status=403)
 
-    messages = convo.messages.order_by("sent_at")[: settings.WHISPR_MSG_HOT_BUFFER]
+    messages = (
+        convo.messages.filter(sent_at__lte=timezone.now())
+        .order_by("sent_at")[: settings.WHISPR_MSG_HOT_BUFFER]
+    )
     return Response(_convo_payload(convo, request.user.id, messages))
 
 
@@ -69,7 +74,10 @@ def poll_conversation(request, convo_id: int):
     except ValueError:
         after_id = 0
 
-    new_msgs = convo.messages.filter(pk__gt=after_id).order_by("sent_at")
+    new_msgs = (
+        convo.messages.filter(pk__gt=after_id, sent_at__lte=timezone.now())
+        .order_by("sent_at")
+    )
     return Response(
         {
             "messages": [_serialize_message(m, request.user.id) for m in new_msgs],
@@ -104,6 +112,9 @@ def post_message(request, convo_id: int):
             convo.messages.order_by("-sent_at").values_list("pk", flat=True)[:keep]
         )
         convo.messages.exclude(pk__in=ids_to_keep).delete()
+
+    if convo.kind == "bot":
+        schedule_bot_reply(convo.pk)
 
     return Response(_serialize_message(msg, request.user.id))
 

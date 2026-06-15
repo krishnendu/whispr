@@ -141,6 +141,28 @@ export const api = {
       token,
       body: "{}",
     }),
+
+  // Personas
+  listPersonas: (token: string) =>
+    req<{ personas: PersonaCard[] }>("/api/personas", { token }),
+  startPersonaChat: (token: string, slug: string) =>
+    req<{ conversation_id: number; persona: PersonaCard }>(
+      `/api/personas/${slug}/start`,
+      { method: "POST", token, body: "{}" },
+    ),
+};
+
+export type PersonaCard = {
+  slug: string;
+  name: string;
+  avatar_url: string;
+  persona_card: {
+    age_vibe?: string;
+    interests?: string[];
+    tics?: string[];
+  };
+  spice_level: "sfw" | "flirty" | "spicy";
+  allowed_tags: string[];
 };
 
 export type ChatMessage = {
