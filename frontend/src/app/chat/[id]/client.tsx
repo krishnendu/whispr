@@ -6,8 +6,6 @@ import { useEffect, useRef, useState } from "react";
 
 import { api, type ChatMessage, type ConversationPayload } from "@/lib/api";
 
-const POLL_MS = 1500;
-
 export function ChatClient({
   token,
   initial,
@@ -22,43 +20,63 @@ export function ChatClient({
   const [ended, setEnded] = useState(!!initial.ended_at);
   const [error, setError] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
-  const endedRef = useRef(ended);
   const lastIdRef = useRef<number>(
     initial.messages.length
       ? initial.messages[initial.messages.length - 1].id
       : 0,
   );
 
+  // SSE stream — server pushes new messages as soon as they're visible.
+  // Falls back to polling if EventSource is unavailable (some old browsers).
   useEffect(() => {
-    endedRef.current = ended;
-  }, [ended]);
-
-  // Poll for new messages from the other side. Stable identity → set up once.
-  useEffect(() => {
-    let cancelled = false;
+    if (ended) return;
     const id = initial.id;
-    const tick = setInterval(async () => {
-      if (endedRef.current || cancelled) return;
-      try {
-        const r = await api.pollConversation(token, id, lastIdRef.current);
-        if (cancelled) return;
-        if (r.messages.length) {
-          lastIdRef.current = r.messages[r.messages.length - 1].id;
-          setMessages((prev) => {
-            const seen = new Set(prev.map((m) => m.id));
-            return [...prev, ...r.messages.filter((m) => !seen.has(m.id))];
-          });
+
+    if (typeof EventSource === "undefined") {
+      // Polling fallback
+      const tick = setInterval(async () => {
+        try {
+          const r = await api.pollConversation(token, id, lastIdRef.current);
+          if (r.messages.length) {
+            lastIdRef.current = r.messages[r.messages.length - 1].id;
+            setMessages((prev) => {
+              const seen = new Set(prev.map((m) => m.id));
+              return [...prev, ...r.messages.filter((m) => !seen.has(m.id))];
+            });
+          }
+          if (r.ended) setEnded(true);
+        } catch (err) {
+          setError(err instanceof Error ? err.message : "Lost connection.");
         }
-        if (r.ended) setEnded(true);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Lost connection.");
+      }, 1500);
+      return () => clearInterval(tick);
+    }
+
+    const es = new EventSource(api.streamUrl(token, id, lastIdRef.current));
+
+    es.addEventListener("message", (e) => {
+      const msg = JSON.parse((e as MessageEvent).data) as ChatMessage;
+      lastIdRef.current = Math.max(lastIdRef.current, msg.id);
+      setMessages((prev) =>
+        prev.some((m) => m.id === msg.id) ? prev : [...prev, msg],
+      );
+    });
+
+    es.addEventListener("end", () => {
+      setEnded(true);
+      es.close();
+    });
+
+    es.onerror = () => {
+      // EventSource auto-reconnects with Last-Event-ID. If readyState is CLOSED,
+      // give up and surface an error. Otherwise stay quiet — reconnect is in flight.
+      if (es.readyState === EventSource.CLOSED) {
+        setError("Lost connection. Refresh to retry.");
       }
-    }, POLL_MS);
-    return () => {
-      cancelled = true;
-      clearInterval(tick);
     };
-  }, [token, initial.id]);
+
+    return () => es.close();
+  }, [token, initial.id, ended]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });

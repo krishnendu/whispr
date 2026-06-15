@@ -1,9 +1,15 @@
-"""Conversation + message endpoints. Polling-based for now; Ably comes next."""
+"""Conversation + message endpoints. Polling + SSE."""
+
+import json
+import time
 
 from django.conf import settings
-from django.db import models, transaction
+from django.db import close_old_connections, models, transaction
+from django.http import HttpResponse, StreamingHttpResponse
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
+from django.views.decorators.http import require_GET
+from rest_framework.authtoken.models import Token
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -129,3 +135,86 @@ def end_conversation(request, convo_id: int):
         convo.ended_at = timezone.now()
         convo.save(update_fields=["ended_at"])
     return Response({"ended": True})
+
+
+# ---------- Server-Sent Events ----------
+#
+# EventSource doesn't let JS set headers, so auth is via `?token=`. The frontend
+# already has the DRF token in memory (handed down server-side from
+# requireUser()), so this isn't a real downgrade.
+#
+# We exit the loop ~270s in so we stay under Vercel's 300s function timeout.
+# The browser auto-reconnects EventSource and sends Last-Event-ID so we
+# resume from the last message id without losing anything.
+
+SSE_MAX_LIFETIME_S = 270
+SSE_TICK_S = 0.25
+SSE_KEEPALIVE_S = 15
+
+
+@require_GET
+def stream_conversation(request, convo_id: int):
+    token_key = request.GET.get("token")
+    if not token_key:
+        return HttpResponse(status=401)
+    try:
+        token = Token.objects.select_related("user").get(key=token_key)
+    except Token.DoesNotExist:
+        return HttpResponse(status=401)
+    user = token.user
+
+    convo = Conversation.objects.filter(pk=convo_id).first()
+    if convo is None or not _ensure_participant(convo, user.id):
+        return HttpResponse(status=404)
+
+    # Resume cursor: prefer Last-Event-ID (browser auto-reconnect), fall back to ?after=
+    last_event_id = request.META.get("HTTP_LAST_EVENT_ID") or request.GET.get("after", "0")
+    try:
+        after_id = int(last_event_id)
+    except (TypeError, ValueError):
+        after_id = 0
+
+    def gen():
+        try:
+            cursor = after_id
+            start = time.time()
+            last_ping = time.time()
+            # Flush a comment immediately so the browser opens the stream.
+            yield ":ok\n\n"
+
+            while True:
+                if time.time() - start > SSE_MAX_LIFETIME_S:
+                    break
+
+                new_msgs = list(
+                    convo.messages.filter(pk__gt=cursor, sent_at__lte=timezone.now())
+                    .order_by("sent_at")
+                )
+                for m in new_msgs:
+                    payload = _serialize_message(m, user.id)
+                    yield (
+                        f"id: {m.id}\n"
+                        f"event: message\n"
+                        f"data: {json.dumps(payload)}\n\n"
+                    )
+                    cursor = m.id
+
+                convo.refresh_from_db(fields=["ended_at"])
+                if convo.ended_at is not None:
+                    yield "event: end\ndata: {}\n\n"
+                    break
+
+                now = time.time()
+                if now - last_ping > SSE_KEEPALIVE_S:
+                    yield ":keepalive\n\n"
+                    last_ping = now
+
+                time.sleep(SSE_TICK_S)
+        finally:
+            # Daemon-thread DB connection hygiene.
+            close_old_connections()
+
+    response = StreamingHttpResponse(gen(), content_type="text/event-stream")
+    response["Cache-Control"] = "no-cache"
+    response["X-Accel-Buffering"] = "no"  # disable any upstream buffering
+    return response

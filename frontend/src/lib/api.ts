@@ -129,6 +129,8 @@ export const api = {
       `/api/conversations/${id}/poll?after=${afterId}`,
       { token },
     ),
+  streamUrl: (token: string, id: number, afterId: number) =>
+    `${API_BASE}/api/conversations/${id}/stream?token=${encodeURIComponent(token)}&after=${afterId}`,
   postMessage: (token: string, id: number, body: string) =>
     req<ChatMessage>(`/api/conversations/${id}/messages`, {
       method: "POST",
