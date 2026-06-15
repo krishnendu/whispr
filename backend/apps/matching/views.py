@@ -1,10 +1,13 @@
-"""Match queue: pair waiting users by tag overlap."""
+"""Match queue: pair waiting users by tag overlap, fall back to a persona after T seconds."""
 
+from django.conf import settings
 from django.db import transaction
+from django.utils import timezone
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
+from apps.bots.models import Persona
 from apps.chat.models import Conversation
 
 from .models import MatchQueueEntry
@@ -74,6 +77,33 @@ def match_start(request):
     return Response({"status": "waiting"})
 
 
+def _pick_persona_for(user_tags: set[str], user) -> Persona | None:
+    """Return the active persona whose allowed_tags overlap most with the user's tags."""
+    best = None
+    best_overlap = -1
+    for p in Persona.objects.filter(is_active=True):
+        if p.spice_level != "sfw" and not user.age_confirmed:
+            continue
+        overlap = len(user_tags & set(p.allowed_tags or []))
+        if overlap > best_overlap:
+            best_overlap = overlap
+            best = p
+    return best
+
+
+def _fallback_to_persona(entry: MatchQueueEntry) -> Conversation | None:
+    user_tags = set(entry.tag_slugs)
+    persona = _pick_persona_for(user_tags, entry.user)
+    if persona is None:
+        return None
+    convo = Conversation.objects.create(
+        kind="bot", participant_a=entry.user, persona=persona
+    )
+    entry.matched_conversation = convo
+    entry.save(update_fields=["matched_conversation"])
+    return convo
+
+
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def match_status(request):
@@ -85,6 +115,18 @@ def match_status(request):
         convo_id = entry.matched_conversation_id
         entry.delete()
         return Response({"status": "matched", "conversation_id": convo_id})
+
+    # Fallback: if no human appeared after T seconds, route to a persona.
+    waited = (timezone.now() - entry.joined_at).total_seconds()
+    if waited >= settings.WHISPR_BOT_FALLBACK_AFTER_S:
+        with transaction.atomic():
+            entry.refresh_from_db()
+            if not entry.matched_conversation_id:
+                convo = _fallback_to_persona(entry)
+                if convo is not None:
+                    entry.delete()
+                    return Response({"status": "matched", "conversation_id": convo.pk})
+
     return Response({"status": "waiting"})
 
 

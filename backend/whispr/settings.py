@@ -139,3 +139,6 @@ WHISPR_MSG_HOT_BUFFER = 50      # Redis: last N messages per conversation
 WHISPR_MSG_WARM_KEEP = 20       # Postgres: last N persisted
 WHISPR_CONVO_IDLE_DAYS = 7      # purge after idle
 WHISPR_VAULT_MAX_PER_USER = 10
+
+# Matching policy
+WHISPR_BOT_FALLBACK_AFTER_S = int(env("WHISPR_BOT_FALLBACK_AFTER_S", "20"))
