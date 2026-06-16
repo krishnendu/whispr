@@ -31,6 +31,21 @@ class Ban(models.Model):
     lifted_at = models.DateTimeField(null=True, blank=True)
 
 
+class Block(models.Model):
+    """user_a has blocked user_b. Matching filters this out."""
+
+    user_a = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="blocks_made"
+    )
+    user_b = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="blocks_against"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = [("user_a", "user_b")]
+
+
 class AuditLog(models.Model):
     actor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name="audit_actions")
     action = models.CharField(max_length=64)

@@ -9,6 +9,7 @@ from rest_framework.response import Response
 
 from apps.bots.models import Persona
 from apps.chat.models import Conversation
+from apps.moderation.models import Block
 
 from .models import MatchQueueEntry
 
@@ -20,9 +21,14 @@ def _user_tag_slugs(user) -> list[str]:
 def _try_pair(entry: MatchQueueEntry) -> Conversation | None:
     """Try to pair `entry` with another waiting user. Returns the created Conversation, or None."""
     my_tags = set(entry.tag_slugs)
+    # Filter out: self, shadow-banned, anyone I've blocked, anyone who's blocked me.
+    blocked_out = set(Block.objects.filter(user_a=entry.user).values_list("user_b_id", flat=True))
+    blocked_in = set(Block.objects.filter(user_b=entry.user).values_list("user_a_id", flat=True))
+    excluded = {entry.user_id} | blocked_out | blocked_in
     candidates = (
         MatchQueueEntry.objects.select_for_update()
-        .exclude(user_id=entry.user_id)
+        .exclude(user_id__in=excluded)
+        .exclude(user__is_shadow_banned=True)
         .filter(matched_conversation__isnull=True)
         .order_by("joined_at")
     )
@@ -56,6 +62,9 @@ def match_start(request):
     user = request.user
     if not user.onboarding_complete:
         return Response({"detail": "Finish onboarding first."}, status=400)
+    if user.is_shadow_banned:
+        # Silent failure — user thinks they're queued but never gets matched.
+        return Response({"status": "waiting"})
 
     tag_slugs = _user_tag_slugs(user)
     if not tag_slugs:

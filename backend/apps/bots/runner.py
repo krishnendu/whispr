@@ -23,6 +23,7 @@ from django.db import close_old_connections, transaction
 from django.utils import timezone
 
 from apps.chat.models import Conversation, Message
+from apps.moderation.judge import get_judge
 
 from .engine import ChatTurn, get_engine, humanize
 from .models import PersonaMemory
@@ -86,17 +87,26 @@ def _do_run(conversation_id: int) -> None:
     if not bubbles:
         return
 
+    judge = get_judge()
     now = timezone.now()
     cumulative = 0.0
     for delay, body in bubbles:
         cumulative += delay
         send_at = now + timedelta(seconds=cumulative)
+        verdict = judge.check(body)
+        mod_flags = {}
+        if verdict.block:
+            log.info("moderation blocked bubble: %s", verdict.reason)
+            body = "[redacted]"
+            mod_flags = {"blocked": True, "reason": verdict.reason}
         with transaction.atomic():
             Message.objects.create(
                 conversation=convo,
                 sender=None,  # null sender = persona
                 body=body,
                 sent_at=send_at,
+                mod_flags=mod_flags,
+                is_redacted=verdict.block,
             )
             convo.last_activity_at = send_at
             convo.save(update_fields=["last_activity_at"])

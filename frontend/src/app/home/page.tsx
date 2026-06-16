@@ -15,6 +15,14 @@ export default async function HomePage() {
           whispr
         </Link>
         <div className="flex items-center gap-4 text-sm text-[#1A1A1A]/60">
+          {user.is_operator && (
+            <Link
+              href="/admin/reports"
+              className="text-xs uppercase tracking-[0.15em] text-[#E2624A] hover:underline"
+            >
+              admin
+            </Link>
+          )}
           <span>@{user.handle}</span>
           <form action="/auth/signout" method="post">
             <button

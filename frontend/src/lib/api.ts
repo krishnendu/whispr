@@ -152,6 +152,49 @@ export const api = {
       `/api/personas/${slug}/start`,
       { method: "POST", token, body: "{}" },
     ),
+
+  // Moderation
+  fileReport: (
+    token: string,
+    body: { conversation_id?: number; reason: string; note?: string },
+  ) =>
+    req<{ filed: boolean }>("/api/report", {
+      method: "POST",
+      token,
+      body: JSON.stringify(body),
+    }),
+  blockInConversation: (token: string, convoId: number) =>
+    req<{ blocked: boolean }>(`/api/conversations/${convoId}/block`, {
+      method: "POST",
+      token,
+      body: "{}",
+    }),
+  adminReports: (token: string) =>
+    req<{ reports: AdminReport[] }>("/api/admin/reports", { token }),
+  adminDismissReport: (token: string, id: number) =>
+    req<{ ok: boolean }>(`/api/admin/reports/${id}/dismiss`, {
+      method: "POST",
+      token,
+      body: "{}",
+    }),
+  adminActionReport: (token: string, id: number) =>
+    req<{ ok: boolean }>(`/api/admin/reports/${id}/action`, {
+      method: "POST",
+      token,
+      body: "{}",
+    }),
+};
+
+export type AdminReport = {
+  id: number;
+  reporter: string | null;
+  target: string | null;
+  target_id: number | null;
+  conversation_id: number | null;
+  reason: string;
+  note: string;
+  status: "open" | "dismissed" | "actioned";
+  created_at: string;
 };
 
 export type PersonaCard = {
