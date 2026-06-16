@@ -142,6 +142,11 @@ def _do_run(conversation_id: int) -> None:
     judge = get_judge()
     now = timezone.now()
     cumulative = 0.0
+    # Set the typing indicator window — covers the whole pause until the last bubble.
+    total_delay = sum(d for d, _ in bubbles)
+    Conversation.objects.filter(pk=convo.pk).update(
+        typing_other_until=now + timedelta(seconds=total_delay + 0.5)
+    )
     for delay, body in bubbles:
         cumulative += delay
         send_at = now + timedelta(seconds=cumulative)

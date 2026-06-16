@@ -12,10 +12,40 @@ from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 
+import logging
+
 from apps.accounts.models import MagicLinkToken
+from apps.bots.engine import ChatTurn, get_engine
 from apps.bots.runner import drain_orphans
 from apps.chat.models import Conversation, Message
 from apps.matching.models import MatchQueueEntry
+
+log = logging.getLogger(__name__)
+
+
+SUMMARY_PROMPT = (
+    "You are summarizing a brief chat for our records. Write 1–2 short sentences "
+    "describing the vibe and topic of the conversation. No names. No greetings. "
+    "Output ONLY the summary, no preamble."
+)
+
+
+def _summarize(messages: list[Message]) -> str:
+    if not messages:
+        return ""
+    history = [
+        ChatTurn(
+            role="user" if m.sender_id is not None else "assistant",
+            content=m.body[:500],
+        )
+        for m in messages
+    ]
+    try:
+        text = get_engine().reply(SUMMARY_PROMPT, history)
+        return text.strip()[:500]
+    except Exception as exc:  # noqa: BLE001
+        log.warning("summarizer failed: %s", exc)
+        return ""
 
 
 def _require_cron_secret(request):
@@ -42,15 +72,20 @@ def cleanup(request):
         ended_at__isnull=True, last_activity_at__lt=idle_cutoff
     ).update(ended_at=now)
 
-    # Drop raw text from ended/idle conversations (keep aggregates).
+    # Summarize then drop raw text from ended/idle conversations.
     drained = 0
+    summarized = 0
     for convo in Conversation.objects.filter(
         ended_at__isnull=False, summary_text=""
-    ).only("id"):
-        # Per the plan: summarize, then drop raw text. Summary is currently empty —
-        # a real summarizer can be wired later; for now we just drop the raw text.
+    ):
+        msgs = list(
+            Message.objects.filter(conversation_id=convo.id).order_by("sent_at")
+        )
+        summary = _summarize(msgs) or "(drained)"
         drained += Message.objects.filter(conversation_id=convo.id).delete()[0]
-        Conversation.objects.filter(pk=convo.id).update(summary_text="(drained)")
+        Conversation.objects.filter(pk=convo.id).update(summary_text=summary)
+        if summary != "(drained)":
+            summarized += 1
 
     # Tokens older than 1h have no business sticking around.
     stale_tokens, _ = MagicLinkToken.objects.filter(created_at__lt=magic_cutoff).delete()
@@ -63,6 +98,7 @@ def cleanup(request):
             "ok": True,
             "idle_closed": idle_closed,
             "messages_drained": drained,
+            "summarized": summarized,
             "stale_tokens": stale_tokens,
             "stale_queue": stale_queue,
         }

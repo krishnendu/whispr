@@ -21,12 +21,15 @@ export function ChatClient({
   const [error, setError] = useState<string | null>(null);
   const [reportOpen, setReportOpen] = useState(false);
   const [blocking, setBlocking] = useState(false);
+  const [otherTyping, setOtherTyping] = useState(false);
+  const [vaulted, setVaulted] = useState(initial.is_vaulted);
   const bottomRef = useRef<HTMLDivElement>(null);
   const lastIdRef = useRef<number>(
     initial.messages.length
       ? initial.messages[initial.messages.length - 1].id
       : 0,
   );
+  const lastTypingSentRef = useRef<number>(0);
 
   async function blockOther() {
     setBlocking(true);
@@ -73,6 +76,13 @@ export function ChatClient({
       setMessages((prev) =>
         prev.some((m) => m.id === msg.id) ? prev : [...prev, msg],
       );
+      // A new message arrived → other side is clearly not typing right now.
+      setOtherTyping(false);
+    });
+
+    es.addEventListener("typing", (e) => {
+      const { typing } = JSON.parse((e as MessageEvent).data) as { typing: boolean };
+      setOtherTyping(typing);
     });
 
     es.addEventListener("end", () => {
@@ -123,6 +133,40 @@ export function ChatClient({
     }
   }
 
+  async function reroll() {
+    try {
+      await api.endConversation(token, initial.id);
+    } finally {
+      router.replace("/match");
+    }
+  }
+
+  async function toggleVault() {
+    try {
+      if (vaulted) {
+        await api.unvault(token, initial.id);
+        setVaulted(false);
+      } else {
+        await api.vault(token, initial.id);
+        setVaulted(true);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not vault.");
+    }
+  }
+
+  function handleDraftChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setDraft(e.target.value);
+    // Send typing ping at most every 3s; gives a 5s server-side TTL of headroom.
+    const now = Date.now();
+    if (now - lastTypingSentRef.current > 3000 && !ended) {
+      lastTypingSentRef.current = now;
+      void api.signalTyping(token, initial.id).catch(() => {
+        /* ignore */
+      });
+    }
+  }
+
   return (
     <main className="flex flex-1 flex-col">
       <header className="flex items-center justify-between border-b border-[#1A1A1A]/10 bg-[#FAF7F2]/80 px-6 py-4 backdrop-blur">
@@ -144,6 +188,12 @@ export function ChatClient({
         </div>
         <div className="flex items-center gap-2">
           <button
+            onClick={toggleVault}
+            className="rounded-full border border-[#1A1A1A]/15 bg-white px-3 py-1 text-xs text-[#1A1A1A]/60 transition-colors hover:text-[#E2624A]"
+          >
+            {vaulted ? "★ saved" : "☆ save"}
+          </button>
+          <button
             onClick={() => setReportOpen(true)}
             disabled={ended}
             className="rounded-full border border-[#1A1A1A]/15 bg-white px-3 py-1 text-xs text-[#1A1A1A]/60 transition-colors hover:text-[#E2624A] disabled:opacity-50"
@@ -157,6 +207,15 @@ export function ChatClient({
               className="rounded-full border border-[#1A1A1A]/15 bg-white px-3 py-1 text-xs text-[#1A1A1A]/60 transition-colors hover:text-[#E2624A] disabled:opacity-50"
             >
               {blocking ? "…" : "block"}
+            </button>
+          )}
+          {initial.kind === "human" && (
+            <button
+              onClick={reroll}
+              disabled={ended}
+              className="rounded-full border border-[#1A1A1A]/15 bg-white px-3 py-1 text-xs text-[#1A1A1A]/60 transition-colors hover:text-[#E2624A] disabled:opacity-50"
+            >
+              find next
             </button>
           )}
           <button
@@ -199,6 +258,15 @@ export function ChatClient({
               </div>
             </div>
           ))}
+          {otherTyping && !ended && (
+            <div className="flex justify-start">
+              <div className="flex items-center gap-1 rounded-3xl border border-[#1A1A1A]/10 bg-white px-4 py-2 text-[#1A1A1A]/50">
+                <span className="inline-block h-1.5 w-1.5 animate-bounce rounded-full bg-[#1A1A1A]/40 [animation-delay:-0.2s]" />
+                <span className="inline-block h-1.5 w-1.5 animate-bounce rounded-full bg-[#1A1A1A]/40 [animation-delay:-0.1s]" />
+                <span className="inline-block h-1.5 w-1.5 animate-bounce rounded-full bg-[#1A1A1A]/40" />
+              </div>
+            </div>
+          )}
           <div ref={bottomRef} />
         </div>
       </section>
@@ -210,7 +278,7 @@ export function ChatClient({
         <div className="mx-auto flex max-w-2xl items-center gap-3">
           <input
             value={draft}
-            onChange={(e) => setDraft(e.target.value)}
+            onChange={handleDraftChange}
             placeholder={ended ? "Conversation ended." : "Whisper something…"}
             disabled={ended || sending}
             className="flex-1 rounded-full border border-[#1A1A1A]/15 bg-white px-4 py-3 text-sm focus:border-[#E2624A] focus:outline-none disabled:opacity-50"

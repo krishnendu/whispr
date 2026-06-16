@@ -25,6 +25,10 @@ class Conversation(models.Model):
     is_vaulted_by_a = models.BooleanField(default=False)
     is_vaulted_by_b = models.BooleanField(default=False)
 
+    # Ephemeral "is typing" hints. The SSE stream reveals one to the other side.
+    typing_a_until = models.DateTimeField(null=True, blank=True)
+    typing_other_until = models.DateTimeField(null=True, blank=True)
+
     class Meta:
         indexes = [
             models.Index(fields=["kind", "last_activity_at"]),

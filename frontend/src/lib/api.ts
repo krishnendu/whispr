@@ -143,6 +143,26 @@ export const api = {
       token,
       body: "{}",
     }),
+  signalTyping: (token: string, id: number) =>
+    req<{ ok: boolean }>(`/api/conversations/${id}/typing`, {
+      method: "POST",
+      token,
+      body: "{}",
+    }),
+  vault: (token: string, id: number) =>
+    req<{ vaulted: boolean }>(`/api/conversations/${id}/vault`, {
+      method: "POST",
+      token,
+      body: "{}",
+    }),
+  unvault: (token: string, id: number) =>
+    req<{ vaulted: boolean }>(`/api/conversations/${id}/unvault`, {
+      method: "POST",
+      token,
+      body: "{}",
+    }),
+  myVault: (token: string) =>
+    req<{ items: VaultItem[] }>("/api/me/vault", { token }),
 
   // Personas
   listPersonas: (token: string) =>
@@ -185,6 +205,15 @@ export const api = {
     }),
 };
 
+export type VaultItem = {
+  id: number;
+  kind: "human" | "bot";
+  other_handle: string;
+  summary_text: string;
+  started_at: string;
+  ended_at: string | null;
+};
+
 export type AdminReport = {
   id: number;
   reporter: string | null;
@@ -224,5 +253,6 @@ export type ConversationPayload = {
   other_handle: string;
   started_at: string;
   ended_at: string | null;
+  is_vaulted: boolean;
   messages: ChatMessage[];
 };

@@ -1,9 +1,11 @@
 import Link from "next/link";
 
+import { api } from "@/lib/api";
 import { requireUser } from "@/lib/session";
 
 export default async function HomePage() {
-  const { user } = await requireUser();
+  const { token, user } = await requireUser();
+  const { items: vault } = await api.myVault(token).catch(() => ({ items: [] }));
 
   return (
     <main className="flex flex-1 flex-col px-6 py-12">
@@ -35,7 +37,7 @@ export default async function HomePage() {
         </div>
       </header>
 
-      <section className="flex flex-1 flex-col items-center justify-center gap-10 text-center">
+      <section className="mx-auto mt-16 flex w-full max-w-3xl flex-col items-center gap-10 text-center">
         <span className="rounded-full border border-[#1A1A1A]/15 px-3 py-1 text-xs uppercase tracking-[0.2em] text-[#1A1A1A]/60">
           {user.tags.length} tags · trust {user.trust_score}
         </span>
@@ -77,7 +79,40 @@ export default async function HomePage() {
           </Link>
         </div>
       </section>
+
+      {vault.length > 0 && (
+        <section className="mx-auto mt-20 flex w-full max-w-3xl flex-col gap-4">
+          <h2 className="text-xs uppercase tracking-[0.2em] text-[#1A1A1A]/50">
+            Saved · {vault.length}/10
+          </h2>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            {vault.map((v) => (
+              <Link
+                key={v.id}
+                href={`/chat/${v.id}`}
+                className="flex flex-col gap-2 rounded-2xl border border-[#1A1A1A]/10 bg-white p-4 transition-colors hover:border-[#E2624A]"
+              >
+                <div className="flex items-baseline justify-between gap-2">
+                  <span className="font-[family-name:var(--font-instrument-serif)] text-xl">
+                    @{v.other_handle}
+                  </span>
+                  {v.kind === "bot" && (
+                    <span className="rounded-full border border-[#E2624A]/30 bg-[#E2624A]/10 px-2 py-0.5 text-[10px] uppercase tracking-wider text-[#E2624A]">
+                      persona
+                    </span>
+                  )}
+                </div>
+                <p className="text-sm text-[#1A1A1A]/60 line-clamp-2">
+                  {v.summary_text || (v.ended_at ? "Conversation ended." : "Still open.")}
+                </p>
+                <span className="text-[10px] uppercase tracking-wider text-[#1A1A1A]/40">
+                  {new Date(v.started_at).toLocaleDateString()}
+                </span>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
     </main>
   );
 }
-

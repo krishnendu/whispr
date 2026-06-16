@@ -2,6 +2,7 @@
 
 import json
 import time
+from datetime import timedelta
 
 from django.conf import settings
 from django.db import close_old_connections, models, transaction
@@ -42,12 +43,14 @@ def _other_handle(convo: Conversation, viewer_id: int) -> str:
 
 
 def _convo_payload(convo: Conversation, viewer_id: int, messages_qs) -> dict:
+    user_is_a = convo.participant_a_id == viewer_id
     return {
         "id": convo.id,
         "kind": convo.kind,
         "other_handle": _other_handle(convo, viewer_id),
         "started_at": convo.started_at.isoformat(),
         "ended_at": convo.ended_at.isoformat() if convo.ended_at else None,
+        "is_vaulted": convo.is_vaulted_by_a if user_is_a else convo.is_vaulted_by_b,
         "messages": [_serialize_message(m, viewer_id) for m in messages_qs],
     }
 
@@ -141,6 +144,109 @@ def end_conversation(request, convo_id: int):
     return Response({"ended": True})
 
 
+# ---------- Typing indicator ----------
+
+TYPING_TTL_S = 5
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def signal_typing(request, convo_id: int):
+    convo = get_object_or_404(Conversation, pk=convo_id)
+    if not _ensure_participant(convo, request.user.id):
+        return Response({"detail": "Not your conversation."}, status=403)
+    if convo.ended_at:
+        return Response({"detail": "Conversation ended."}, status=400)
+    until = timezone.now() + timedelta(seconds=TYPING_TTL_S)
+    if convo.participant_a_id == request.user.id:
+        convo.typing_a_until = until
+        convo.save(update_fields=["typing_a_until"])
+    else:
+        convo.typing_other_until = until
+        convo.save(update_fields=["typing_other_until"])
+    return Response({"ok": True})
+
+
+# ---------- Vault ----------
+
+VAULT_MAX = 10
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def vault_conversation(request, convo_id: int):
+    convo = get_object_or_404(Conversation, pk=convo_id)
+    if not _ensure_participant(convo, request.user.id):
+        return Response({"detail": "Not your conversation."}, status=403)
+    user_is_a = convo.participant_a_id == request.user.id
+
+    # Cap the user's vault — drop the oldest if at the limit.
+    if user_is_a and not convo.is_vaulted_by_a:
+        _evict_oldest_vault(request.user.id, "a")
+        convo.is_vaulted_by_a = True
+        convo.save(update_fields=["is_vaulted_by_a"])
+    elif not user_is_a and not convo.is_vaulted_by_b:
+        _evict_oldest_vault(request.user.id, "b")
+        convo.is_vaulted_by_b = True
+        convo.save(update_fields=["is_vaulted_by_b"])
+    return Response({"vaulted": True})
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def unvault_conversation(request, convo_id: int):
+    convo = get_object_or_404(Conversation, pk=convo_id)
+    if not _ensure_participant(convo, request.user.id):
+        return Response({"detail": "Not your conversation."}, status=403)
+    if convo.participant_a_id == request.user.id:
+        convo.is_vaulted_by_a = False
+        convo.save(update_fields=["is_vaulted_by_a"])
+    else:
+        convo.is_vaulted_by_b = False
+        convo.save(update_fields=["is_vaulted_by_b"])
+    return Response({"vaulted": False})
+
+
+def _evict_oldest_vault(user_id: int, side: str) -> None:
+    field = "is_vaulted_by_a" if side == "a" else "is_vaulted_by_b"
+    qs = Conversation.objects.filter(**{field: True})
+    if side == "a":
+        qs = qs.filter(participant_a_id=user_id)
+    else:
+        qs = qs.filter(participant_b_id=user_id)
+    if qs.count() < VAULT_MAX:
+        return
+    oldest = qs.order_by("started_at").first()
+    if oldest is not None:
+        setattr(oldest, field, False)
+        oldest.save(update_fields=[field])
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def list_vault(request):
+    a = Conversation.objects.filter(
+        participant_a=request.user, is_vaulted_by_a=True
+    ).select_related("persona", "participant_b")
+    b = Conversation.objects.filter(
+        participant_b=request.user, is_vaulted_by_b=True
+    ).select_related("persona", "participant_a")
+    items = []
+    for c in list(a) + list(b):
+        items.append(
+            {
+                "id": c.id,
+                "kind": c.kind,
+                "other_handle": _other_handle(c, request.user.id),
+                "summary_text": c.summary_text or "",
+                "started_at": c.started_at.isoformat(),
+                "ended_at": c.ended_at.isoformat() if c.ended_at else None,
+            }
+        )
+    items.sort(key=lambda x: x["started_at"], reverse=True)
+    return Response({"items": items})
+
+
 # ---------- Server-Sent Events ----------
 #
 # EventSource doesn't let JS set headers, so auth is via `?token=`. The frontend
@@ -178,11 +284,14 @@ def stream_conversation(request, convo_id: int):
     except (TypeError, ValueError):
         after_id = 0
 
+    user_is_a = convo.participant_a_id == user.id
+
     def gen():
         try:
             cursor = after_id
             start = time.time()
             last_ping = time.time()
+            last_typing_emitted = False
             # Flush a comment immediately so the browser opens the stream.
             yield ":ok\n\n"
 
@@ -203,10 +312,21 @@ def stream_conversation(request, convo_id: int):
                     )
                     cursor = m.id
 
-                convo.refresh_from_db(fields=["ended_at"])
+                convo.refresh_from_db(
+                    fields=["ended_at", "typing_a_until", "typing_other_until"]
+                )
                 if convo.ended_at is not None:
                     yield "event: end\ndata: {}\n\n"
                     break
+
+                # Typing — emit a state change for the OTHER side.
+                other_until = convo.typing_other_until if user_is_a else convo.typing_a_until
+                typing_now = other_until is not None and other_until > timezone.now()
+                if typing_now != last_typing_emitted:
+                    yield (
+                        f"event: typing\ndata: {json.dumps({'typing': typing_now})}\n\n"
+                    )
+                    last_typing_emitted = typing_now
 
                 now = time.time()
                 if now - last_ping > SSE_KEEPALIVE_S:
