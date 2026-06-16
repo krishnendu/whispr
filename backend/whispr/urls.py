@@ -2,6 +2,8 @@ from django.contrib import admin
 from django.http import JsonResponse
 from django.urls import include, path
 
+from . import cron
+
 
 def health(request):
     return JsonResponse({"ok": True, "service": "whispr-api"})
@@ -10,6 +12,7 @@ def health(request):
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/health", health),
+    path("api/cron/cleanup", cron.cleanup),
     path("api/", include("apps.accounts.urls")),
     path("api/", include("apps.tags.urls")),
     path("api/", include("apps.chat.urls")),

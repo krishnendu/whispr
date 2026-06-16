@@ -20,6 +20,8 @@ class Conversation(models.Model):
     last_activity_at = models.DateTimeField(auto_now=True)
     ended_at = models.DateTimeField(null=True, blank=True)
 
+    summary_text = models.TextField(blank=True, default="")
+
     is_vaulted_by_a = models.BooleanField(default=False)
     is_vaulted_by_b = models.BooleanField(default=False)
 

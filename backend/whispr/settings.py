@@ -142,3 +142,6 @@ WHISPR_VAULT_MAX_PER_USER = 10
 
 # Matching policy
 WHISPR_BOT_FALLBACK_AFTER_S = int(env("WHISPR_BOT_FALLBACK_AFTER_S", "20"))
+
+# Shared secret for cron endpoints (Vercel Cron sends this in Authorization).
+CRON_SECRET = env("CRON_SECRET", "")

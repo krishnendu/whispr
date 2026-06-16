@@ -10,5 +10,8 @@
   ],
   "env": {
     "DJANGO_SETTINGS_MODULE": "whispr.settings"
-  }
+  },
+  "crons": [
+    { "path": "/api/cron/cleanup", "schedule": "0 4 * * *" }
+  ]
 }

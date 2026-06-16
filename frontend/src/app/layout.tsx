@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Instrument_Serif } from "next/font/google";
 import "./globals.css";
 
@@ -16,6 +16,12 @@ const instrumentSerif = Instrument_Serif({
 export const metadata: Metadata = {
   title: "Whispr — Whisper into the void",
   description: "Anonymous chat. Pick a vibe. Someone always whispers back.",
+  manifest: "/manifest.webmanifest",
+  icons: { icon: "/icon.svg" },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#1A1A1A",
 };
 
 export default function RootLayout({
