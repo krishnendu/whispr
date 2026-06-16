@@ -151,11 +151,16 @@ def _do_run(conversation_id: int) -> None:
         cumulative += delay
         send_at = now + timedelta(seconds=cumulative)
         verdict = judge.check(body)
-        mod_flags = {}
+        mod_flags: dict = {}
+        soft = False
         if verdict.block:
             log.info("moderation blocked bubble: %s", verdict.reason)
             body = "[redacted]"
             mod_flags = {"blocked": True, "reason": verdict.reason}
+        elif verdict.soft:
+            log.info("moderation soft-flagged bubble: %s", verdict.reason)
+            mod_flags = {"soft": True, "reason": verdict.reason}
+            soft = True
         with transaction.atomic():
             Message.objects.create(
                 conversation=convo,
@@ -164,6 +169,7 @@ def _do_run(conversation_id: int) -> None:
                 sent_at=send_at,
                 mod_flags=mod_flags,
                 is_redacted=verdict.block,
+                soft_flag=soft,
             )
             convo.last_activity_at = send_at
             convo.save(update_fields=["last_activity_at"])

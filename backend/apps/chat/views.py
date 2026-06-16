@@ -28,6 +28,7 @@ def _serialize_message(m: Message, viewer_id: int) -> dict:
         "sent_at": m.sent_at.isoformat(),
         "is_me": m.sender_id == viewer_id,
         "is_persona": m.sender_id is None,
+        "soft_flag": m.soft_flag,
     }
 
 

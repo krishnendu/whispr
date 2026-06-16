@@ -23,6 +23,7 @@ export function ChatClient({
   const [blocking, setBlocking] = useState(false);
   const [otherTyping, setOtherTyping] = useState(false);
   const [vaulted, setVaulted] = useState(initial.is_vaulted);
+  const [revealed, setRevealed] = useState<Set<number>>(new Set());
   const bottomRef = useRef<HTMLDivElement>(null);
   const lastIdRef = useRef<number>(
     initial.messages.length
@@ -273,22 +274,44 @@ export function ChatClient({
               Say hi. The vibe is yours to set.
             </p>
           )}
-          {messages.map((m) => (
-            <div
-              key={m.id}
-              className={`flex ${m.is_me ? "justify-end" : "justify-start"}`}
-            >
+          {messages.map((m) => {
+            // Only blur incoming soft-flagged bubbles — never your own outgoing.
+            const blurred = m.soft_flag && !m.is_me && !revealed.has(m.id);
+            return (
               <div
-                className={`max-w-[75%] rounded-3xl px-4 py-2 text-sm leading-relaxed ${
-                  m.is_me
-                    ? "bg-[#1A1A1A] text-[#FAF7F2]"
-                    : "border border-[#1A1A1A]/10 bg-white text-[#1A1A1A]"
-                }`}
+                key={m.id}
+                className={`flex ${m.is_me ? "justify-end" : "justify-start"}`}
               >
-                {m.body}
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (blurred) {
+                      setRevealed((prev) => {
+                        const next = new Set(prev);
+                        next.add(m.id);
+                        return next;
+                      });
+                    }
+                  }}
+                  disabled={!blurred}
+                  className={`relative max-w-[75%] cursor-default text-left rounded-3xl px-4 py-2 text-sm leading-relaxed ${
+                    m.is_me
+                      ? "bg-[#1A1A1A] text-[#FAF7F2]"
+                      : "border border-[#1A1A1A]/10 bg-white text-[#1A1A1A]"
+                  } ${blurred ? "cursor-pointer" : ""}`}
+                >
+                  <span className={blurred ? "select-none blur-md" : ""}>
+                    {m.body}
+                  </span>
+                  {blurred && (
+                    <span className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-3xl bg-[#1A1A1A]/5 text-[10px] uppercase tracking-[0.2em] text-[#1A1A1A]/70">
+                      tap to reveal
+                    </span>
+                  )}
+                </button>
               </div>
-            </div>
-          ))}
+            );
+          })}
           {otherTyping && !ended && (
             <div className="flex justify-start">
               <div className="flex items-center gap-1 rounded-3xl border border-[#1A1A1A]/10 bg-white px-4 py-2 text-[#1A1A1A]/50">

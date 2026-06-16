@@ -293,6 +293,7 @@ export type ChatMessage = {
   sent_at: string;
   is_me: boolean;
   is_persona: boolean;
+  soft_flag: boolean;
 };
 
 export type ConversationPayload = {

@@ -24,24 +24,47 @@ log = logging.getLogger(__name__)
 
 @dataclass
 class Verdict:
-    block: bool
+    """Three-way moderation outcome.
+
+    - ok:    deliver as-is.
+    - soft:  deliver but blur client-side until the recipient taps to reveal.
+    - block: redact entirely.
+    """
+
+    level: str = "ok"  # "ok" | "soft" | "block"
     reason: str = ""
+
+    @property
+    def block(self) -> bool:
+        return self.level == "block"
+
+    @property
+    def soft(self) -> bool:
+        return self.level == "soft"
 
 
 JUDGE_PROMPT = (
-    "You are a content moderator for a chat app. Decide if this assistant message "
-    "violates any of these HARD rules:\n"
-    "  1. Sexualizing minors in any way.\n"
-    "  2. Detailed instructions for self-harm or suicide methods.\n"
-    "  3. Credible, specific threats of violence against a real person.\n"
-    "  4. Explicit non-consensual sexual scenarios.\n"
-    "  5. Doxxing — sharing real names, addresses, phone numbers, or identifying info.\n"
+    "You are a content moderator for a chat app. Classify this assistant message:\n"
     "\n"
-    "Be CONSERVATIVE — only block clear-cut violations. Flirty, mature, dark, "
-    "or emotional language is fine. Profanity is fine.\n"
+    "BLOCK if it does any of these:\n"
+    "  1. Sexualizes minors in any way.\n"
+    "  2. Gives detailed instructions for self-harm or suicide methods.\n"
+    "  3. Makes a credible, specific threat of violence against a real person.\n"
+    "  4. Describes explicit non-consensual sexual scenarios.\n"
+    "  5. Doxxes — shares real names, addresses, phone numbers, or identifying info.\n"
+    "\n"
+    "SOFT-FLAG (deliver but blur until tapped) if it is:\n"
+    "  - Sexually explicit beyond mild flirting.\n"
+    "  - Graphically violent or gory.\n"
+    "  - Heavy emotional content (suicidal ideation discussed, intense distress) — "
+    "    NOT methods, which are BLOCK.\n"
+    "  - Uses slurs.\n"
+    "\n"
+    "Otherwise OK. Flirty, mature, dark, or emotional language is fine. Profanity is fine.\n"
+    "Be conservative on BLOCK; be willing to use SOFT for genuinely intense content.\n"
     "\n"
     "Reply with ONE JSON object on a single line, nothing else:\n"
-    '  {"block": true|false, "reason": "<short>"}\n'
+    '  {"verdict": "ok"|"soft"|"block", "reason": "<short>"}\n'
 )
 
 
@@ -51,7 +74,7 @@ class Judge(Protocol):
 
 class MockJudge:
     def check(self, text: str) -> Verdict:
-        return Verdict(block=False)
+        return Verdict(level="ok")
 
 
 class GroqJudge:
@@ -83,17 +106,24 @@ class GroqJudge:
             raw = r.json()["choices"][0]["message"]["content"].strip()
         except Exception as exc:  # noqa: BLE001
             log.warning("moderation judge failed: %s — fail-open", exc)
-            return Verdict(block=False)
+            return Verdict(level="ok")
 
         # The model is told to emit pure JSON, but be defensive.
         match = re.search(r"\{.*?\}", raw, re.DOTALL)
         if not match:
-            return Verdict(block=False)
+            return Verdict(level="ok")
         try:
             data = json.loads(match.group(0))
         except json.JSONDecodeError:
-            return Verdict(block=False)
-        return Verdict(block=bool(data.get("block", False)), reason=str(data.get("reason", "")))
+            return Verdict(level="ok")
+        # Accept either {"verdict": ...} or the older {"block": bool} shape.
+        if "verdict" in data:
+            level = str(data.get("verdict", "ok")).lower()
+            if level not in ("ok", "soft", "block"):
+                level = "ok"
+        else:
+            level = "block" if bool(data.get("block", False)) else "ok"
+        return Verdict(level=level, reason=str(data.get("reason", "")))
 
 
 def get_judge() -> Judge:
