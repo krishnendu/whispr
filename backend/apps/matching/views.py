@@ -57,10 +57,8 @@ def _try_pair(entry: MatchQueueEntry) -> Conversation | None:
     return conversation
 
 
-@api_view(["POST"])
-@permission_classes([IsAuthenticated])
-def match_start(request):
-    user = request.user
+def enqueue_and_match(user) -> Response:
+    """Core matching logic. Returns a DRF Response describing queue state."""
     if not user.onboarding_complete:
         return Response({"detail": "Finish onboarding first."}, status=400)
     if user.is_shadow_banned:
@@ -87,6 +85,12 @@ def match_start(request):
     if convo is not None:
         return Response({"status": "matched", "conversation_id": convo.pk})
     return Response({"status": "waiting"})
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def match_start(request):
+    return enqueue_and_match(request.user)
 
 
 def _pick_persona_for(user_tags: set[str], user) -> Persona | None:

@@ -150,6 +150,11 @@ export const api = {
       token,
       body: "{}",
     }),
+  rerollConversation: (token: string, id: number) =>
+    req<{ status: "matched" | "waiting"; conversation_id?: number }>(
+      `/api/conversations/${id}/reroll`,
+      { method: "POST", token, body: "{}" },
+    ),
   signalTyping: (token: string, id: number) =>
     req<{ ok: boolean }>(`/api/conversations/${id}/typing`, {
       method: "POST",
@@ -220,6 +225,21 @@ export const api = {
       `/api/admin/users/${id}/toggle-ban`,
       { method: "POST", token, body: "{}" },
     ),
+  adminAuditLog: (token: string, action?: string) =>
+    req<{ entries: AuditEntry[] }>(
+      `/api/admin/audit${action ? `?action=${encodeURIComponent(action)}` : ""}`,
+      { token },
+    ),
+};
+
+export type AuditEntry = {
+  id: number;
+  actor: string | null;
+  action: string;
+  target_type: string;
+  target_id: string;
+  payload: Record<string, unknown>;
+  created_at: string;
 };
 
 export type AdminUser = {

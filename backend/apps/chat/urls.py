@@ -8,6 +8,7 @@ urlpatterns = [
     path("conversations/<int:convo_id>/stream", views.stream_conversation),
     path("conversations/<int:convo_id>/messages", views.post_message),
     path("conversations/<int:convo_id>/end", views.end_conversation),
+    path("conversations/<int:convo_id>/reroll", views.reroll_conversation),
     path("conversations/<int:convo_id>/typing", views.signal_typing),
     path("conversations/<int:convo_id>/vault", views.vault_conversation),
     path("conversations/<int:convo_id>/unvault", views.unvault_conversation),

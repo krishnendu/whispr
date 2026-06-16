@@ -166,6 +166,28 @@ def end_conversation(request, convo_id: int):
     return Response({"ended": True})
 
 
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def reroll_conversation(request, convo_id: int):
+    """End the current conversation and immediately re-enter the match queue.
+
+    One round-trip replaces the end-then-match dance the client used to do —
+    avoids a race where the matcher could pair the user before the end commits.
+    """
+    from apps.matching.views import enqueue_and_match
+
+    convo = get_object_or_404(Conversation, pk=convo_id)
+    if not _ensure_participant(convo, request.user.id):
+        return Response({"detail": "Not your conversation."}, status=403)
+    if convo.kind != "human":
+        return Response({"detail": "Reroll is for human chats only."}, status=400)
+    if convo.ended_at is None:
+        convo.ended_at = timezone.now()
+        convo.save(update_fields=["ended_at"])
+        _maybe_award_trust(convo)
+    return enqueue_and_match(request.user)
+
+
 def _maybe_award_trust(convo: Conversation) -> None:
     """If the conversation went the distance, bump both participants' trust."""
     if convo.kind != "human" or convo.participant_b_id is None:

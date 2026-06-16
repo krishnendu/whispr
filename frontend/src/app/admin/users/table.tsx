@@ -59,6 +59,9 @@ export function UsersTable({
             reports
           </Link>
           <span className="text-[#E2624A]">users</span>
+          <Link href="/admin/audit" className="hover:text-[#E2624A]">
+            audit
+          </Link>
         </div>
       </header>
 

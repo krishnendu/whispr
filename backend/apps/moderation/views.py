@@ -10,7 +10,7 @@ from rest_framework.response import Response
 from apps.chat.models import Conversation
 from whispr.ratelimit import check_rate
 
-from .models import Ban, Block, Report
+from .models import AuditLog, Ban, Block, Report
 
 User = get_user_model()
 
@@ -119,6 +119,13 @@ def admin_dismiss_report(request, report_id: int):
     r = get_object_or_404(Report, pk=report_id)
     r.status = "dismissed"
     r.save(update_fields=["status"])
+    AuditLog.objects.create(
+        actor=request.user,
+        action="report_dismissed",
+        target_type="report",
+        target_id=str(r.pk),
+        payload={"reason": r.reason},
+    )
     return Response({"ok": True})
 
 
@@ -137,6 +144,13 @@ def admin_action_report(request, report_id: int):
         Ban.objects.create(user=target, kind="shadow", reason=f"report#{r.id}: {r.reason}")
     r.status = "actioned"
     r.save(update_fields=["status"])
+    AuditLog.objects.create(
+        actor=request.user,
+        action="report_actioned",
+        target_type="report",
+        target_id=str(r.pk),
+        payload={"reason": r.reason, "target_user_id": r.target_user_id},
+    )
     return Response({"ok": True})
 
 
@@ -185,4 +199,43 @@ def admin_toggle_shadow_ban(request, user_id: int):
     target.save(update_fields=["is_shadow_banned"])
     if target.is_shadow_banned:
         Ban.objects.create(user=target, kind="shadow", reason="manual admin action")
+    AuditLog.objects.create(
+        actor=request.user,
+        action="shadow_ban_toggled",
+        target_type="user",
+        target_id=str(target.pk),
+        payload={"is_shadow_banned": target.is_shadow_banned, "handle": target.handle},
+    )
     return Response({"is_shadow_banned": target.is_shadow_banned})
+
+
+# ---------- Admin audit log ----------
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def admin_audit_log(request):
+    blocked = _require_operator(request)
+    if blocked:
+        return blocked
+    action = (request.query_params.get("action") or "").strip()
+    qs = AuditLog.objects.select_related("actor").order_by("-created_at")
+    if action:
+        qs = qs.filter(action=action)
+    qs = qs[:200]
+    return Response(
+        {
+            "entries": [
+                {
+                    "id": e.id,
+                    "actor": e.actor.handle if e.actor else None,
+                    "action": e.action,
+                    "target_type": e.target_type,
+                    "target_id": e.target_id,
+                    "payload": e.payload,
+                    "created_at": e.created_at.isoformat(),
+                }
+                for e in qs
+            ]
+        }
+    )

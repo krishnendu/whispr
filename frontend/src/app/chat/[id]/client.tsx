@@ -145,10 +145,15 @@ export function ChatClient({
 
   async function reroll() {
     try {
-      await api.endConversation(token, initial.id);
-    } finally {
-      router.replace("/match");
+      const r = await api.rerollConversation(token, initial.id);
+      if (r.status === "matched" && r.conversation_id) {
+        router.replace(`/chat/${r.conversation_id}`);
+        return;
+      }
+    } catch {
+      // fall through to the queue page
     }
+    router.replace("/match");
   }
 
   async function toggleVault() {

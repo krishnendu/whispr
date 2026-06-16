@@ -54,6 +54,9 @@ export function ReportsTable({
           <Link href="/admin/users" className="hover:text-[#E2624A]">
             users
           </Link>
+          <Link href="/admin/audit" className="hover:text-[#E2624A]">
+            audit
+          </Link>
         </div>
       </header>
 
