@@ -10,6 +10,7 @@ from rest_framework.response import Response
 from apps.bots.models import Persona
 from apps.chat.models import Conversation
 from apps.moderation.models import Block
+from whispr.ratelimit import check_rate
 
 from .models import MatchQueueEntry
 
@@ -65,6 +66,8 @@ def match_start(request):
     if user.is_shadow_banned:
         # Silent failure — user thinks they're queued but never gets matched.
         return Response({"status": "waiting"})
+    if not check_rate(f"match:{user.id}", limit=10, window_s=60):
+        return Response({"detail": "Too many match attempts. Slow down."}, status=429)
 
     tag_slugs = _user_tag_slugs(user)
     if not tag_slugs:

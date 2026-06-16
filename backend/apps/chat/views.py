@@ -15,6 +15,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from apps.bots.runner import schedule_bot_reply
+from whispr.ratelimit import check_rate
 
 from .models import Conversation, Message
 
@@ -100,6 +101,9 @@ def post_message(request, convo_id: int):
         return Response({"detail": "Empty message."}, status=400)
     if len(body) > 2000:
         return Response({"detail": "Message too long."}, status=400)
+
+    if not check_rate(f"msg:{request.user.id}", limit=30, window_s=60):
+        return Response({"detail": "Slow down."}, status=429)
 
     convo = get_object_or_404(Conversation, pk=convo_id)
     if not _ensure_participant(convo, request.user.id):

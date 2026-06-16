@@ -13,6 +13,7 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/health", health),
     path("api/cron/cleanup", cron.cleanup),
+    path("api/cron/process-bot-jobs", cron.process_bot_jobs),
     path("api/", include("apps.accounts.urls")),
     path("api/", include("apps.tags.urls")),
     path("api/", include("apps.chat.urls")),

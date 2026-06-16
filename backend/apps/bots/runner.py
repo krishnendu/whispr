@@ -26,7 +26,7 @@ from apps.chat.models import Conversation, Message
 from apps.moderation.judge import get_judge
 
 from .engine import ChatTurn, get_engine, humanize
-from .models import PersonaMemory
+from .models import BotJob, PersonaMemory
 
 log = logging.getLogger(__name__)
 
@@ -34,23 +34,75 @@ WINDOW_SIZE = 20
 
 
 def schedule_bot_reply(conversation_id: int) -> None:
-    """Fire-and-forget: spawn a daemon thread to generate and write the reply."""
+    """Persist a BotJob and try to process it now via an in-process thread.
+
+    The job is the durable artifact — the thread is just an optimistic fast path.
+    If the thread dies (e.g. serverless function instance recycled), the cron
+    drain or a standalone worker will pick the job up later.
+    """
+    job = BotJob.objects.create(conversation=Conversation.objects.get(pk=conversation_id))
     t = threading.Thread(
-        target=_run_reply,
-        args=(conversation_id,),
+        target=_run_job,
+        args=(job.pk,),
         name=f"bot-reply-{conversation_id}",
         daemon=True,
     )
     t.start()
 
 
-def _run_reply(conversation_id: int) -> None:
+def _run_job(job_id: int) -> None:
     try:
-        _do_run(conversation_id)
+        _claim_and_run(job_id)
     except Exception:  # noqa: BLE001 - top-level thread boundary
         log.exception("bot reply thread crashed")
     finally:
         close_old_connections()
+
+
+def _claim_and_run(job_id: int) -> bool:
+    """Atomically transition a pending job to working, run it, mark done/failed.
+
+    Returns True if this caller did the work, False if someone else already had it.
+    """
+    claimed = BotJob.objects.filter(pk=job_id, status="pending").update(
+        status="working", claimed_at=timezone.now()
+    )
+    if not claimed:
+        return False
+    job = BotJob.objects.get(pk=job_id)
+    try:
+        _do_run(job.conversation_id)
+        job.status = "done"
+        job.completed_at = timezone.now()
+        job.save(update_fields=["status", "completed_at"])
+    except Exception as exc:  # noqa: BLE001
+        log.exception("bot job %s failed", job_id)
+        job.status = "failed"
+        job.error = str(exc)[:1000]
+        job.completed_at = timezone.now()
+        job.save(update_fields=["status", "error", "completed_at"])
+    return True
+
+
+def drain_orphans(max_jobs: int = 25, stale_after_s: int = 30) -> dict:
+    """Claim and run any pending jobs older than `stale_after_s`.
+
+    Called by /api/cron/process-bot-jobs and by the standalone worker loop.
+    """
+    cutoff = timezone.now() - timedelta(seconds=stale_after_s)
+    candidates = list(
+        BotJob.objects.filter(status="pending", created_at__lte=cutoff)
+        .order_by("created_at")
+        .values_list("pk", flat=True)[:max_jobs]
+    )
+    done = 0
+    skipped = 0
+    for jid in candidates:
+        if _claim_and_run(jid):
+            done += 1
+        else:
+            skipped += 1
+    return {"considered": len(candidates), "done": done, "skipped": skipped}
 
 
 def _do_run(conversation_id: int) -> None:

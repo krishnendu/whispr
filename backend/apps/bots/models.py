@@ -32,3 +32,31 @@ class PersonaMemory(models.Model):
 
     class Meta:
         unique_together = [("user", "persona")]
+
+
+class BotJob(models.Model):
+    """Durable queue of pending bot-reply work.
+
+    The in-process daemon thread tries to process the job immediately;
+    a standalone worker (or the cron drain) picks up anything left
+    pending past the staleness threshold.
+    """
+
+    STATUS_CHOICES = [
+        ("pending", "Pending"),
+        ("working", "Working"),
+        ("done", "Done"),
+        ("failed", "Failed"),
+    ]
+
+    conversation = models.ForeignKey(
+        "chat.Conversation", on_delete=models.CASCADE, related_name="bot_jobs"
+    )
+    status = models.CharField(max_length=12, choices=STATUS_CHOICES, default="pending")
+    created_at = models.DateTimeField(auto_now_add=True)
+    claimed_at = models.DateTimeField(null=True, blank=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+    error = models.TextField(blank=True)
+
+    class Meta:
+        indexes = [models.Index(fields=["status", "created_at"])]

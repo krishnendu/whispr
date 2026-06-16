@@ -13,6 +13,8 @@ from rest_framework.response import Response
 
 from apps.tags.models import Tag, UserTag
 
+from whispr.ratelimit import check_rate
+
 from .models import MagicLinkToken
 from .serializers import UpdateProfileSerializer, UserSerializer
 from .utils import get_or_create_user_by_email, issue_token
@@ -84,6 +86,13 @@ def magic_send(request):
     email = (request.data.get("email") or "").strip().lower()
     if "@" not in email:
         return Response({"detail": "Valid email required."}, status=400)
+
+    # 5 magic links per email per hour, 20 per IP per hour
+    if not check_rate(f"magic:email:{email}", limit=5, window_s=3600):
+        return Response({"detail": "Too many sign-in attempts. Try again later."}, status=429)
+    ip = request.META.get("HTTP_X_FORWARDED_FOR", request.META.get("REMOTE_ADDR", "?")).split(",")[0].strip()
+    if not check_rate(f"magic:ip:{ip}", limit=20, window_s=3600):
+        return Response({"detail": "Too many sign-in attempts. Try again later."}, status=429)
 
     mlt = MagicLinkToken.issue(email)
     frontend_base = request.data.get("frontend_base") or "http://localhost:3000"

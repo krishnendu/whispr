@@ -1,0 +1,16 @@
+app = "whispr-worker"
+primary_region = "iad"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  PYTHONUNBUFFERED = "1"
+
+# This isn't an HTTP service — no [http_service] block. The worker just runs the loop.
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "256mb"
+
+[deploy]
+  strategy = "immediate"

@@ -8,6 +8,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from apps.chat.models import Conversation
+from whispr.ratelimit import check_rate
 
 from .models import Ban, Block, Report
 
@@ -25,6 +26,9 @@ def file_report(request):
 
     if reason not in {c[0] for c in Report.REASON_CHOICES}:
         return Response({"detail": "Invalid reason."}, status=400)
+
+    if not check_rate(f"report:{request.user.id}", limit=10, window_s=86400):
+        return Response({"detail": "Too many reports today."}, status=429)
 
     target_user = None
     convo = None
@@ -44,6 +48,11 @@ def file_report(request):
         reason=reason,
         note=note,
     )
+    # Soft trust-score decay on the target. Auto-shadow-ban deliberately not wired —
+    # operator still gates the harsh action.
+    if target_user is not None:
+        target_user.trust_score = max(0, target_user.trust_score - 5)
+        target_user.save(update_fields=["trust_score"])
     return Response({"filed": True})
 
 
