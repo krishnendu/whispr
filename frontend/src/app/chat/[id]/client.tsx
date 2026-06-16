@@ -30,6 +30,8 @@ export function ChatClient({
       : 0,
   );
   const lastTypingSentRef = useRef<number>(0);
+  const typingStartedAtRef = useRef<number | null>(null);
+  const pasteCountRef = useRef<number>(0);
 
   async function blockOther() {
     setBlocking(true);
@@ -111,13 +113,21 @@ export function ChatClient({
     if (!body || sending || ended) return;
     setSending(true);
     setError(null);
+    const startedAt = typingStartedAtRef.current;
+    const signals = {
+      typing_ms: startedAt ? Date.now() - startedAt : 0,
+      paste_count: pasteCountRef.current,
+      length: body.length,
+    };
     try {
-      const msg = await api.postMessage(token, initial.id, body);
+      const msg = await api.postMessage(token, initial.id, body, signals);
       lastIdRef.current = Math.max(lastIdRef.current, msg.id);
       setMessages((prev) =>
         prev.some((m) => m.id === msg.id) ? prev : [...prev, msg],
       );
       setDraft("");
+      typingStartedAtRef.current = null;
+      pasteCountRef.current = 0;
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not send.");
     } finally {
@@ -156,7 +166,11 @@ export function ChatClient({
   }
 
   function handleDraftChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setDraft(e.target.value);
+    const value = e.target.value;
+    if (!draft && value && typingStartedAtRef.current === null) {
+      typingStartedAtRef.current = Date.now();
+    }
+    setDraft(value);
     // Send typing ping at most every 3s; gives a 5s server-side TTL of headroom.
     const now = Date.now();
     if (now - lastTypingSentRef.current > 3000 && !ended) {
@@ -165,6 +179,10 @@ export function ChatClient({
         /* ignore */
       });
     }
+  }
+
+  function handlePaste() {
+    pasteCountRef.current += 1;
   }
 
   return (
@@ -183,6 +201,14 @@ export function ChatClient({
           {initial.kind === "bot" && (
             <span className="rounded-full border border-[#E2624A]/30 bg-[#E2624A]/10 px-2 py-0.5 text-xs uppercase tracking-wider text-[#E2624A]">
               persona
+            </span>
+          )}
+          {initial.kind === "human" && initial.other_verified && (
+            <span
+              title="Signed in with a verified email"
+              className="rounded-full border border-[#1A1A1A]/15 bg-white px-2 py-0.5 text-xs uppercase tracking-wider text-[#1A1A1A]/60"
+            >
+              ✓ verified
             </span>
           )}
         </div>
@@ -279,6 +305,7 @@ export function ChatClient({
           <input
             value={draft}
             onChange={handleDraftChange}
+            onPaste={handlePaste}
             placeholder={ended ? "Conversation ended." : "Whisper something…"}
             disabled={ended || sending}
             className="flex-1 rounded-full border border-[#1A1A1A]/15 bg-white px-4 py-3 text-sm focus:border-[#E2624A] focus:outline-none disabled:opacity-50"

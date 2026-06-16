@@ -51,6 +51,9 @@ class Message(models.Model):
     sent_at = models.DateTimeField(auto_now_add=True)
     mod_flags = models.JSONField(default=dict)        # {"toxicity": 0.1, "blocked": false, ...}
     is_redacted = models.BooleanField(default=False)
+    # Behavioral signals from the client. Data-only for now; nothing enforces.
+    # Shape: {"typing_ms": int, "paste_count": int, "length": int}
+    behavior_signals = models.JSONField(default=dict, blank=True)
 
     class Meta:
         indexes = [models.Index(fields=["conversation", "sent_at"])]

@@ -165,6 +165,21 @@ def _replace_tags(user, slugs):
     UserTag.objects.bulk_create([UserTag(user=user, tag=t) for t in tags])
     Tag.objects.filter(slug__in=[t.slug for t in tags]).update(usage_count=models.F("usage_count") + 1)
 
+    # Honeypot detection: a real user never picks these (they're filtered client-side).
+    honeypot_hits = [t for t in tags if t.is_honeypot]
+    if honeypot_hits:
+        from apps.moderation.models import AuditLog
+
+        AuditLog.objects.create(
+            actor=user,
+            action="honeypot_tag_attached",
+            target_type="user",
+            target_id=str(user.pk),
+            payload={"tags": [t.slug for t in honeypot_hits]},
+        )
+        user.trust_score = max(0, user.trust_score - 30)
+        user.save(update_fields=["trust_score"])
+
 
 # avoid circular import-time pull
 from django.db import models  # noqa: E402

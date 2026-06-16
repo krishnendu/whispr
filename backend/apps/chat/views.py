@@ -35,19 +35,27 @@ def _ensure_participant(convo: Conversation, user_id: int) -> bool:
     return user_id in (convo.participant_a_id, convo.participant_b_id)
 
 
+def _other(convo: Conversation, viewer_id: int):
+    if convo.kind == "bot":
+        return None
+    return convo.participant_b if convo.participant_a_id == viewer_id else convo.participant_a
+
+
 def _other_handle(convo: Conversation, viewer_id: int) -> str:
     if convo.kind == "bot":
         return convo.persona.name if convo.persona else "persona"
-    other = convo.participant_b if convo.participant_a_id == viewer_id else convo.participant_a
+    other = _other(convo, viewer_id)
     return other.handle if other else "—"
 
 
 def _convo_payload(convo: Conversation, viewer_id: int, messages_qs) -> dict:
     user_is_a = convo.participant_a_id == viewer_id
+    other = _other(convo, viewer_id)
     return {
         "id": convo.id,
         "kind": convo.kind,
         "other_handle": _other_handle(convo, viewer_id),
+        "other_verified": bool(other.oauth_provider) if other else False,
         "started_at": convo.started_at.isoformat(),
         "ended_at": convo.ended_at.isoformat() if convo.ended_at else None,
         "is_vaulted": convo.is_vaulted_by_a if user_is_a else convo.is_vaulted_by_b,
@@ -108,6 +116,14 @@ def post_message(request, convo_id: int):
     if not check_rate(f"msg:{request.user.id}", limit=30, window_s=60):
         return Response({"detail": "Slow down."}, status=429)
 
+    signals_raw = request.data.get("signals") or {}
+    behavior_signals: dict = {}
+    if isinstance(signals_raw, dict):
+        for key in ("typing_ms", "paste_count", "length"):
+            v = signals_raw.get(key)
+            if isinstance(v, (int, float)):
+                behavior_signals[key] = int(v)
+
     convo = get_object_or_404(Conversation, pk=convo_id)
     if not _ensure_participant(convo, request.user.id):
         return Response({"detail": "Not your conversation."}, status=403)
@@ -115,7 +131,12 @@ def post_message(request, convo_id: int):
         return Response({"detail": "Conversation ended."}, status=400)
 
     with transaction.atomic():
-        msg = Message.objects.create(conversation=convo, sender=request.user, body=body)
+        msg = Message.objects.create(
+            conversation=convo,
+            sender=request.user,
+            body=body,
+            behavior_signals=behavior_signals,
+        )
         convo.last_activity_at = timezone.now()
         convo.save(update_fields=["last_activity_at"])
 
@@ -141,7 +162,22 @@ def end_conversation(request, convo_id: int):
     if convo.ended_at is None:
         convo.ended_at = timezone.now()
         convo.save(update_fields=["ended_at"])
+        _maybe_award_trust(convo)
     return Response({"ended": True})
+
+
+def _maybe_award_trust(convo: Conversation) -> None:
+    """If the conversation went the distance, bump both participants' trust."""
+    if convo.kind != "human" or convo.participant_b_id is None:
+        return
+    msg_count = convo.messages.count()
+    if msg_count < 10:
+        return
+    for u in (convo.participant_a, convo.participant_b):
+        if u is None:
+            continue
+        u.trust_score = min(100, u.trust_score + 1)
+        u.save(update_fields=["trust_score"])
 
 
 # ---------- Typing indicator ----------

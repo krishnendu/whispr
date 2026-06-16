@@ -132,7 +132,7 @@ export function OnboardingForm({
                 {CATEGORY_LABELS[c] ?? c}
               </h3>
               <div className="flex flex-wrap gap-2">
-                {tags.categories[c].map((t) => {
+                {tags.categories[c].filter((t) => !t.is_honeypot).map((t) => {
                   const active = selected.has(t.slug);
                   return (
                     <button

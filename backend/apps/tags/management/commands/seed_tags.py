@@ -19,6 +19,15 @@ SEEDS = [
     ("time", ["morning", "afternoon", "evening", "3am"]),
 ]
 
+# Honeypots — surfaced in /api/tags so scrapers index them, but the legitimate
+# frontend filters them out of the picker. Any user who actually attaches one
+# of these is overwhelmingly likely to be a bot.
+HONEYPOTS = [
+    ("custom", "free-bitcoin"),
+    ("custom", "buy-followers"),
+    ("custom", "increase-engagement"),
+]
+
 
 class Command(BaseCommand):
     help = "Seed the curated tag catalog."
@@ -32,4 +41,11 @@ class Command(BaseCommand):
                     slug=slug, defaults={"label": label, "category": category}
                 )
                 created += int(was_created)
+        for category, label in HONEYPOTS:
+            slug = slugify(label)
+            _, was_created = Tag.objects.get_or_create(
+                slug=slug,
+                defaults={"label": label, "category": category, "is_honeypot": True},
+            )
+            created += int(was_created)
         self.stdout.write(self.style.SUCCESS(f"Seeded ({created} new)."))

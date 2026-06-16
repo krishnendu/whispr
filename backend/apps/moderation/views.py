@@ -138,3 +138,51 @@ def admin_action_report(request, report_id: int):
     r.status = "actioned"
     r.save(update_fields=["status"])
     return Response({"ok": True})
+
+
+# ---------- Admin user list ----------
+
+
+def _serialize_user(u) -> dict:
+    return {
+        "id": u.id,
+        "handle": u.handle,
+        "trust_score": u.trust_score,
+        "is_shadow_banned": u.is_shadow_banned,
+        "is_verified": bool(u.oauth_provider),
+        "age_confirmed": u.age_confirmed,
+        "created_at": u.date_joined.isoformat() if u.date_joined else None,
+        "last_seen": u.last_seen.isoformat() if u.last_seen else None,
+    }
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def admin_users(request):
+    blocked = _require_operator(request)
+    if blocked:
+        return blocked
+    UserModel = get_user_model()
+    q = (request.query_params.get("q") or "").strip().lower()
+    qs = UserModel.objects.all()
+    if q:
+        qs = qs.filter(handle__icontains=q)
+    qs = qs.order_by("-date_joined")[:100]
+    return Response({"users": [_serialize_user(u) for u in qs]})
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def admin_toggle_shadow_ban(request, user_id: int):
+    blocked = _require_operator(request)
+    if blocked:
+        return blocked
+    UserModel = get_user_model()
+    target = get_object_or_404(UserModel, pk=user_id)
+    if target.id == request.user.id:
+        return Response({"detail": "Can't ban yourself."}, status=400)
+    target.is_shadow_banned = not target.is_shadow_banned
+    target.save(update_fields=["is_shadow_banned"])
+    if target.is_shadow_banned:
+        Ban.objects.create(user=target, kind="shadow", reason="manual admin action")
+    return Response({"is_shadow_banned": target.is_shadow_banned})

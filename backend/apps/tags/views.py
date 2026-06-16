@@ -4,6 +4,8 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
+from whispr.ratelimit import check_rate
+
 from .models import Tag
 
 
@@ -13,6 +15,7 @@ def _serialize(tag: Tag) -> dict:
         "label": tag.label,
         "category": tag.category,
         "is_user_created": tag.is_user_created,
+        "is_honeypot": tag.is_honeypot,
         "usage_count": tag.usage_count,
     }
 
@@ -36,6 +39,8 @@ def create_tag(request):
     label = (request.data.get("label") or "").strip()
     if not label or len(label) > 32:
         return Response({"detail": "Label must be 1–32 characters."}, status=400)
+    if not check_rate(f"tag-create:{request.user.id}", limit=5, window_s=86400):
+        return Response({"detail": "Too many new tags today."}, status=429)
     slug = slugify(label)[:48]
     if not slug:
         return Response({"detail": "Invalid label."}, status=400)

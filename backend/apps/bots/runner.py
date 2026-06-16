@@ -175,8 +175,14 @@ def _do_run(conversation_id: int) -> None:
             )
             convo.messages.exclude(pk__in=ids_to_keep).delete()
 
-    # Update the persona memory's window snapshot.
+    # Update the persona memory's window snapshot + opportunistically extract facts.
     _update_memory(memory, window, bubbles)
+    try:
+        from .extractor import maybe_extract
+
+        maybe_extract(memory)
+    except Exception:  # noqa: BLE001 - extractor must never break a reply
+        log.exception("fact extractor crashed")
 
 
 def _compose_system_prompt(base: str, memory: PersonaMemory) -> str:

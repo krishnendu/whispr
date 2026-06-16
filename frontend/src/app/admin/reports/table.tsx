@@ -49,9 +49,12 @@ export function ReportsTable({
         >
           ← whispr
         </Link>
-        <span className="text-xs uppercase tracking-[0.2em] text-[#1A1A1A]/50">
-          admin / reports
-        </span>
+        <div className="flex items-center gap-4 text-xs uppercase tracking-[0.2em] text-[#1A1A1A]/50">
+          <span className="text-[#E2624A]">reports</span>
+          <Link href="/admin/users" className="hover:text-[#E2624A]">
+            users
+          </Link>
+        </div>
       </header>
 
       <section className="mx-auto mt-10 w-full max-w-5xl">

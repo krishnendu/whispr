@@ -6,13 +6,19 @@ from .models import User
 class UserSerializer(serializers.ModelSerializer):
     tags = serializers.SerializerMethodField()
 
+    is_verified = serializers.SerializerMethodField()
+
     class Meta:
         model = User
         fields = [
             "id", "handle", "pronouns", "locale", "age_confirmed",
-            "trust_score", "is_operator", "onboarding_complete", "tags",
+            "trust_score", "is_operator", "is_verified",
+            "onboarding_complete", "tags",
         ]
-        read_only_fields = ["id", "trust_score", "is_operator"]
+        read_only_fields = ["id", "trust_score", "is_operator", "is_verified"]
+
+    def get_is_verified(self, obj):
+        return bool(obj.oauth_provider)
 
     def get_tags(self, obj):
         return [

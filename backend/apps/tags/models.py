@@ -17,6 +17,7 @@ class Tag(models.Model):
     label = models.CharField(max_length=48)
     category = models.CharField(max_length=16, choices=CATEGORY_CHOICES, default="topic")
     is_user_created = models.BooleanField(default=False)
+    is_honeypot = models.BooleanField(default=False)  # surfaced in /api/tags; client filters out
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="+"
     )

@@ -14,6 +14,7 @@ export type WhisprUser = {
   age_confirmed: boolean;
   trust_score: number;
   is_operator: boolean;
+  is_verified: boolean;
   onboarding_complete: boolean;
   tags: { slug: string; label: string; category: string }[];
 };
@@ -26,6 +27,7 @@ export type TagsByCategory = {
       label: string;
       category: string;
       is_user_created: boolean;
+      is_honeypot?: boolean;
       usage_count: number;
     }[]
   >;
@@ -131,11 +133,16 @@ export const api = {
     ),
   streamUrl: (token: string, id: number, afterId: number) =>
     `${API_BASE}/api/conversations/${id}/stream?token=${encodeURIComponent(token)}&after=${afterId}`,
-  postMessage: (token: string, id: number, body: string) =>
+  postMessage: (
+    token: string,
+    id: number,
+    body: string,
+    signals?: { typing_ms?: number; paste_count?: number; length?: number },
+  ) =>
     req<ChatMessage>(`/api/conversations/${id}/messages`, {
       method: "POST",
       token,
-      body: JSON.stringify({ body }),
+      body: JSON.stringify({ body, signals }),
     }),
   endConversation: (token: string, id: number) =>
     req<{ ended: boolean }>(`/api/conversations/${id}/end`, {
@@ -203,6 +210,27 @@ export const api = {
       token,
       body: "{}",
     }),
+  adminUsers: (token: string, q?: string) =>
+    req<{ users: AdminUser[] }>(
+      `/api/admin/users${q ? `?q=${encodeURIComponent(q)}` : ""}`,
+      { token },
+    ),
+  adminToggleBan: (token: string, id: number) =>
+    req<{ is_shadow_banned: boolean }>(
+      `/api/admin/users/${id}/toggle-ban`,
+      { method: "POST", token, body: "{}" },
+    ),
+};
+
+export type AdminUser = {
+  id: number;
+  handle: string;
+  trust_score: number;
+  is_shadow_banned: boolean;
+  is_verified: boolean;
+  age_confirmed: boolean;
+  created_at: string | null;
+  last_seen: string | null;
 };
 
 export type VaultItem = {
@@ -251,6 +279,7 @@ export type ConversationPayload = {
   id: number;
   kind: "human" | "bot";
   other_handle: string;
+  other_verified: boolean;
   started_at: string;
   ended_at: string | null;
   is_vaulted: boolean;
